@@ -1,0 +1,64 @@
+feb-14-2014
+Summary stats to include:
+average winnings / day
+average winnings / champion
+average wins / champion
+min and max of winnings
+
+apr-30-2013
+Started paper.txt that contains notes on what to show in the paper.
+
+Added Winner.p to jeopardyData that identifies the winner
+of each game (code in winner.R)
+
+Sourced in revised jcleanData.R that includes removal of WebID 504
+that is an incomplete show (see mar-11-2013 note).
+
+Applied jcleanData to jeopardyData to get new jeopardyData with no
+WebID 504.
+
+mar-11-2013
+2001-11-26, Show 3966, WebID 1062, clue dollar values are doubled
+2001-11-23, Show 3966, WebID 1057, last came before dollar values are doubled
+
+Game 1290, WebID 504 has no DD and no final results, consider dropping?
+
+mar-02-2013
+The file celebrityWebID.txt has the WebID's for the celebrity
+Jeopardy games.  These all had a City value of NA.  Note that
+these come in groups of three.
+
+Created the JEOPARDY.git repository under ~/Dropbox/REPOS.
+
+feb-28-2013
+May also want to apply nchar(State) == 0 check at the end.
+
+feb-24-2013
+Use stringr::str_trim to trim leading and trailing white space instead
+of assuming a single space after commas.  Applied to City and State
+in jscrapeDirect.R.  May want to apply str_trim in vector fashion
+at the end.
+
+jan-27-2013
+141 - appears to be student tournement but not in title
+
+177 - a police officer from Los Angeles is State
+546 - comedian, and radio commentator from Los Angeles, California is state
+
+jan-26-2013
+3952 has city: Error in d - 1 : non-numeric argument to binary operator\n
+     has state: Error in d + 2 : non-numeric argument to binary operator\n
+
+jan-22-2013
+Get games from:
+  http://www.j-archive.com/showgame.php?game_id=nnnn
+where nnnn is an integer from 1 to 
+
+1309: "J! Archive - Trebek pilot #1, taped 1983-09-18"
+1347: "J! Archive - Super Jeopardy! show #1, aired 1990-06-16"
+173: "J! Archive - Show #1, aired 1984-09-10"
+
+jan-19-2013
+From: https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/
+
+
