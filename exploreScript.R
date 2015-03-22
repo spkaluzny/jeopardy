@@ -49,7 +49,7 @@ dfJeop02 %>% filter(State %in% c(state.name, "D.C.")) %>%
         coord_flip() +
         ylab("Number of Players / 1 Million Population (log2)") +
         xlab("State")
-#                                                                               
+#
 # Number of wins
 group_by(dfJeop02, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
@@ -58,3 +58,18 @@ group_by(dfJeop02, PlayerID) %>%
     ggplot(aes(x=Wins)) +
         geom_bar(binwidth=0.5) +
         coord_flip()
+#
+# Dollar winnings per game
+filter(dfJeop02, Winner.p) %>%
+    filter(Final_Winnings < 60000) %>%
+    ggplot(aes(x=Final_Winnings)) +
+        geom_histogram()
+#
+# Total winnings per player:
+group_by(dfJeop02, PlayerID) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    filter( Wins < 19) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_point()
+
