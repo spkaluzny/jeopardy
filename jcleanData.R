@@ -17,6 +17,90 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
     if(length(indx)) {
         df[indx, "State"] <- "Nevada"
     }
+    indx <- which(df$State == "Onio")
+    if(length(indx)) {
+        df[indx, "State"] <- "Ohio"
+    }
+    indx <- which(df$State == "Caifornia")
+    if(length(indx)) {
+        df[indx, "State"] <- "California"
+    }
+    indx <- which(df$State == "IL")
+    if(length(indx)) {
+        df[indx, "State"] <- "Illinois"
+    }
+    indx <- which(df$State == "Kenrucky")
+    if(length(indx)) {
+        df[indx, "State"] <- "Kentucky"
+    }
+    indx <- which(df$State == "New Nork")
+    if(length(indx)) {
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$State == "British Colombia")
+    if(length(indx)) {
+        df[indx, "State"] <- "British Columbia"
+    }
+    indx <- which(df$State == "British Colombia")
+    if(length(indx)) {
+        df[indx, "State"] <- "British Columbia"
+    }
+    indx <- which(df$State == "Ontario Canada")
+    if(length(indx)) {
+        df[indx, "State"] <- "Ontario, Canada"
+    }
+    # State is just Canada, add Province:
+    indx <- which(df$City == "Toronto" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Sault Ste. Marie" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Ottawa" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Guelph" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Winnipeg" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Manitoba, Canada"
+    }
+    indx <- which(df$City == "Montreal" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Quebec, Canada"
+    }
+    indx <- which(df$City == "Vancouver" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "British Columbia, Canada"
+    }
+    indx <- which(df$City == "West Vancouver" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "British Columbia, Canada"
+    }
+    # Add Canada to Provinces:
+    for(p in c("Alberta", "British Columbia", "Manitoba",
+        "Northwest Territories", "Nova Scotia", "Ontario",
+        "Prince Edward Island",
+        "Quebec", "Saskatchewan", "Yukon Territory")) {
+        indx <- which(df$State == p)
+        if(length(indx)) {
+            df[indx, "State"] <- paste0(p, ", Canada")
+        }
+    }
+    indx <- which(df$State == "Trinidad and Tobago and now in New York")
+    if(length(indx)) {
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$State == "Easton Maryland")
+    if(length(indx)) {
+        df[indx, "State"] <- "Maryland"
+        df[indx, "City"] <- "Easton"
+    }
     # State guess
     indx <- which(df$State == "Hawaii[?]")
     if(length(indx)) {
@@ -33,8 +117,33 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
         df[indx, "City"] <- "New York"
         df[indx, "State"] <- "New York"
     }
+    indx <- which(df$City == "Bronx" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Brooklyn" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Manhattan" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Queens" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Staten Island" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
     # New York City
-    indx <- which(df$State == "New York City")
+    indx <- which(df$State == "New York City" | df$City == "New York City")
     if(length(indx)) {
         df[indx, "City"] <- "New York"
         df[indx, "State"] <- "New York"
