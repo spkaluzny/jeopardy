@@ -69,7 +69,16 @@ filter(dfJeop02, Winner.p) %>%
 group_by(dfJeop02, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    filter(Wins > 0) %>%
     filter( Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
-        geom_point()
+        geom_jitter(position = position_jitter(width = .3))
+# boxplot:    
+group_by(dfJeop02, PlayerID) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    filter(Wins > 0) %>%
+    filter(Wins < 19) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_boxplot(aes(group = Wins))
 
