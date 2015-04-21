@@ -38,6 +38,7 @@ function (x)
 library(dplyr)
 dfJeop02 <- group_by(dfJeop02, Show) %>%
     mutate(Winner.p = isWinner(Final_Winnings))
+dfJeop02 <- ungroup(dfJeop02)
 #
 # Number of players in final jeopardy
 nFinal <-
@@ -46,7 +47,9 @@ function(x) {
 }
 dfJeop02 <- group_by(dfJeop02, Show) %>%
     mutate(NumberInFinal = nFinal(Final_Winnings))
+dfJeop02 <- ungroup(dfJeop02)
 #                                                                               
 # Number of wins
 dfJeop02 <- group_by(dfJeop02, PlayerID) %>%
     mutate(NumberWins = n() - 1)
+dfJeop02 <- ungroup(dfJeop02)
