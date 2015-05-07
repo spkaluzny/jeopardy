@@ -181,6 +181,18 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
             }
         }
     }
+    indx <- grep('nurse and "Mr. Mom"', df$Occupation)
+    if(length(indx)) {
+        df$Occupation[indx] <- "Nurse"
+    }
+    indx <- grep('"Mr. Mom"', df$Occupation)
+    if(length(indx)) {
+                df$Occupation[indx] <- "Dad"
+    }
+    indx <- grep('Leslie "Lefty" Scott', df$Name)
+    if(length(indx)) {
+                df$Name[indx] <- "Leslie Scott"
+    }
     if(dropPilot) {
         indx <- grep("pilot", df$Title)
         if(length(indx)) {
