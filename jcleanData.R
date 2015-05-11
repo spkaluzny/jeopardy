@@ -189,6 +189,14 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
     if(length(indx)) {
                 df$Occupation[indx] <- "Dad"
     }
+    # Drop Back to School Week games with children
+    # Occupation was their age.
+    youthOccupation <- c("10-year-old", "11-year-old", "12-year-old",
+        "eleven-year-old", "ten-year-old", "twelve-year-old")
+    indx <- which(dfJeop02$Occupation %in% youthOccupation)
+    if(length(indx)) {
+        df <- df[-indx, ]
+    }
     indx <- grep('Leslie "Lefty" Scott', df$Name)
     if(length(indx)) {
                 df$Name[indx] <- "Leslie Scott"

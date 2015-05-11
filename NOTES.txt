@@ -1,3 +1,13 @@
+may-10-2015
+Found 60 Occupations as 10, 11 or 12 year. Checked website and found
+these are from Back To School Week games:
+  sep-1999
+  oct-2000
+  sep-2001
+  sep-2002
+Title does not call out Back to School Week, use Occupation to
+find and them remove these.
+
 feb-14-2014
 Summary stats to include:
 average winnings / day
@@ -60,5 +70,3 @@ where nnnn is an integer from 1 to
 
 jan-19-2013
 From: https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/
-
-
