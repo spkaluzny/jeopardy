@@ -34,4 +34,14 @@ dfJeop02 %>%
     group_by(Show) %>%
     summarise(ShowGender = trigen(Gender)) %>%
     with(table(ShowGender))
-    
+# Gender of contestants
+dfJeop02 %>%
+    group_by(PlayerID) %>%
+    summarise(Gender1 = first(Gender)) %>%
+    with(table(Gender1))
+dfJeop02 %>%
+    group_by(PlayerID) %>%
+    summarise(Gender1 = last(Gender)) %>%
+    with(table(Gender1))  # Should be same as value using first
+
+
