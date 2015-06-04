@@ -3,23 +3,23 @@
 # goodID <- jgetid(id)
 # write(goodID, "goodID.txt")
 # source("jscrapeDirect.R")
-# dfJeop01 <- jscrapeDirect(goodID)
-# saveRDS(dfJeop01, "dfJeop01.rds")
-dfJeop01 <- readRDS("dfJeop01.rds")
+# jeopardyDataRaw <- jscrapeDirect(goodID)
+# saveRDS(jeopardyDataRaw, "jeopardyDataRaw.rds")
+jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 #
 # Clean the data:
 source("jcleanData.R")
-dfJeop02 <- jcleanData(dfJeop01)
+jeopardyData <- jcleanData(jeopardyDataRaw)
 #
 # Add unique PlayerID and Date:
-dfJeop02$PlayerID <- with(dfJeop02,
+jeopardyData$PlayerID <- with(jeopardyData,
     paste(Name, Occupation, City, State, sep='.'))
-airedIndex <- regexpr(" aired ", dfJeop02$Title)
-dfJeop02$Date <- as.Date(
-    substr(dfJeop02$Title, airedIndex + 7, nchar(dfJeop02$Title)))
+airedIndex <- regexpr(" aired ", jeopardyData$Title)
+jeopardyData$Date <- as.Date(
+    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
 # 
 # Doubled values
-dfJeop02$MaxValue <- ifelse(dfJeop02$Date <= "2001-11-23",
+jeopardyData$MaxValue <- ifelse(jeopardyData$Date <= "2001-11-23",
     "Max1000", "Max2000")
 #
 # Compute winners - Winner.p
@@ -36,20 +36,20 @@ function (x)
     (r == 3) |(r == 2.5) | (r == 4)
 }
 library(dplyr)
-dfJeop02 <- group_by(dfJeop02, Show) %>%
+jeopardyData <- group_by(jeopardyData, Show) %>%
     mutate(Winner.p = isWinner(Final_Winnings))
-dfJeop02 <- ungroup(dfJeop02)
+jeopardyData <- ungroup(jeopardyData)
 #
 # Number of players in final jeopardy
 nFinal <-
 function(x) {
     rep(sum(x > 0), 3)
 }
-dfJeop02 <- group_by(dfJeop02, Show) %>%
+jeopardyData <- group_by(jeopardyData, Show) %>%
     mutate(NumberInFinal = nFinal(Final_Winnings))
-dfJeop02 <- ungroup(dfJeop02)
+jeopardyData <- ungroup(jeopardyData)
 #                                                                               
 # Number of wins
-dfJeop02 <- group_by(dfJeop02, PlayerID) %>%
+jeopardyData <- group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1)
-dfJeop02 <- ungroup(dfJeop02)
+jeopardyData <- ungroup(jeopardyData)

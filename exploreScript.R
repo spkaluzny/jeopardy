@@ -1,13 +1,13 @@
 require(dplyr)
 require(ggplot2)
-summary(dfJeop02[dfJeop02$Winner.p, "Final_Winnings"])
-group_by(dfJeop02, MaxValue) %>%
+summary(jeopardyData[jeopardyData$Winner.p, "Final_Winnings"])
+group_by(jeopardyData, MaxValue) %>%
     summarize(MedianWinnings=median(Final_Winnings), 
        AveWinnings=mean(Final_Winnings))
-filter(dfJeop02, Winner.p) %>% 
+filter(jeopardyData, Winner.p) %>% 
     ggplot(aes(x=Final_Winnings)) +
     geom_histogram()
-filter(dfJeop02, Winner.p) %>% 
+filter(jeopardyData, Winner.p) %>% 
     ggplot(aes(x=Final_Winnings)) +
     geom_histogram() +
     facet_grid(MaxValue ~ .)
@@ -17,7 +17,7 @@ nFinal<-
 function(x) {
    rep(sum(x > 0), 3)
 }
-df <- group_by(dfJeop02, Show) %>%
+df <- group_by(jeopardyData, Show) %>%
     mutate(NumberInFinal = nFinal(Final_Winnings))
 #
 # State population data
@@ -28,17 +28,17 @@ pop <- pipe("sed -n -e '/Alabama/,/Wyoming/p' NST-EST2012-01.csv | cut -d'\"' --
 stateDF <- read.table(pop, sep=";", col.names=c("State", "Population"),         
     stringsAsFactors=FALSE)
 stateDF[stateDF$State == "District of Columbia", "State"] <- "D.C."
-dfJeop02 %>% filter(State %in% c(state.name, "D.C.")) %>%
+jeopardyData %>% filter(State %in% c(state.name, "D.C.")) %>%
     group_by(State) %>%
     summarise(N=n()) %>%
     ggplot(aes(x=State, y=N)) +
         geom_bar(stat="identity") +
         coord_flip()
-dfJeop02 %>% filter(State %in% c(state.name, "D.C.")) %>%
+jeopardyData %>% filter(State %in% c(state.name, "D.C.")) %>%
     ggplot(aes(x=reorder(State, State, length))) +
         geom_bar(width = 0.6) +
         coord_flip()
-dfJeop02 %>% filter(State %in% c(state.name, "D.C.")) %>%
+jeopardyData %>% filter(State %in% c(state.name, "D.C.")) %>%
     group_by(State) %>%
     summarise(N=n()) %>%
     full_join(stateDF, by="State") %>%
@@ -51,7 +51,7 @@ dfJeop02 %>% filter(State %in% c(state.name, "D.C.")) %>%
         xlab("State")
 #
 # Number of wins
-group_by(dfJeop02, PlayerID) %>%
+group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins)) %>%
     filter(Wins > 1 & Wins < 19) %>%
@@ -60,13 +60,13 @@ group_by(dfJeop02, PlayerID) %>%
         coord_flip()
 #
 # Dollar winnings per game
-filter(dfJeop02, Winner.p) %>%
+filter(jeopardyData, Winner.p) %>%
     filter(Final_Winnings < 60000) %>%
     ggplot(aes(x=Final_Winnings)) +
         geom_histogram()
 #
 # Total winnings per player:
-group_by(dfJeop02, PlayerID) %>%
+group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
     filter(Wins > 0) %>%
@@ -74,7 +74,7 @@ group_by(dfJeop02, PlayerID) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_jitter(position = position_jitter(width = .3))
 # boxplot:    
-group_by(dfJeop02, PlayerID) %>%
+group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
     filter(Wins > 0) %>%

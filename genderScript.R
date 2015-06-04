@@ -1,6 +1,6 @@
 require(dplyr)
 require(gender)
-firstName <- with(dfJeop02, gsub("^(.*?)\\s.*", "\\1", Name))
+firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
 # Estimate gender using the gender from the gender package
 # Only do the unique firstNames
 uFirstName <- unique(firstName)
@@ -20,7 +20,7 @@ uGender <- ifelse((!is.na(uGender) & uGender == "M" &
 uGender <- ifelse((!is.na(uGender) & uGender == "F" &
     uPropFemale < propCutoff), NA, uGender)
 mFirstName <- match(firstName, uFirstName)
-dfJeop02$Gender <- uGender[mFirstName]
+jeopardyData$Gender <- uGender[mFirstName]
 #
 # Show gender tryad:
 trigen <- function(gen) {
@@ -30,16 +30,16 @@ trigen <- function(gen) {
         paste0(sort(gen), collapse = "")
     }
 }
-dfJeop02 %>%
+jeopardyData %>%
     group_by(Show) %>%
     summarise(ShowGender = trigen(Gender)) %>%
     with(table(ShowGender))
 # Gender of contestants
-dfJeop02 %>%
+jeopardyData %>%
     group_by(PlayerID) %>%
     summarise(Gender1 = first(Gender)) %>%
     with(table(Gender1))
-dfJeop02 %>%
+jeopardyData %>%
     group_by(PlayerID) %>%
     summarise(Gender1 = last(Gender)) %>%
     with(table(Gender1))  # Should be same as value using first
