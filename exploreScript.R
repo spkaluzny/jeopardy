@@ -81,4 +81,3 @@ group_by(jeopardyData, PlayerID) %>%
     filter(Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_boxplot(aes(group = Wins))
-
