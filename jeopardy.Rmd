@@ -1,10 +1,13 @@
-Analysis of Jeopardy Games
-========================================================
+---
+title: Analysis of Jeopardy Games
+author: Stephen Kaluzny
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
 
 ```{r echo=FALSE}
 jeopardyData <-readRDS("jeopardyData.rds")
 ```
-
 This is an analysis of data about Jeopardy games that is avilable at http://www.j-archive.com/.
 The data includes information mainly about the players: names, home city, number of agames played, winnings, etc.
 This analysis does not look at the content of the game questions (answers). 
@@ -45,11 +48,72 @@ jeopardyDataRaw <- jscrapeDirect(id=1:5000)
 jeopardyData <- jcleanData(jeopardyDataRaw)
 ```
 
+Added variables
+* MaxValue
+* Gender
+
 Analysis
 ---------
 The final dataset has `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
-This covers `r nrow(jeopardyData) / 3` games from
+Each represents a single player in a game,
+each games consists of 3 rows
+i,e, we have
+`r nrow(jeopardyData)` player observations and
+`r nrow(jeopardyData) / 3` games.
+The games are from
 `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
+
+Final Winnings
+--------------
+```{r}
+# name: winnings
+require(dplyr)                                                      
+summary(jeopardyData[jeopardyData$Winner.p, "Final_Winnings"])
+group_by(jeopardyData, MaxValue) %>%
+    summarize(MedianWinnings=median(Final_Winnings), 
+       AveWinnings=mean(Final_Winnings))
+```
+```{r fig.width=8, fig.height=8}
+require(ggplot2)
+filter(jeopardyData, Winner.p) %>% 
+    ggplot(aes(x=Final_Winnings)) +
+    geom_histogram()
+filter(jeopardyData, Winner.p) %>% 
+    ggplot(aes(x=Final_Winnings)) +
+    geom_histogram() +
+    facet_grid(MaxValue ~ .)
+
+# Number of wins
+group_by(jeopardyData, PlayerID) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins)) %>%
+    filter(Wins > 1 & Wins < 19) %>%
+    ggplot(aes(x=Wins)) +
+        geom_bar(binwidth=0.5) +
+        coord_flip()
+#
+# Dollar winnings per game
+filter(jeopardyData, Winner.p) %>%
+    filter(Final_Winnings < 60000) %>%
+    ggplot(aes(x=Final_Winnings)) +
+        geom_histogram()
+# Total winnings per player:
+group_by(jeopardyData, PlayerID) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    filter(Wins > 0) %>%
+    filter( Wins < 19) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_jitter(position = position_jitter(width = .3))
+# boxplot:    
+group_by(jeopardyData, PlayerID) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    filter(Wins > 0) %>%
+    filter(Wins < 19) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_boxplot(aes(group = Wins))
+```
 
 Players by State
 ----------------
