@@ -1,3 +1,5 @@
+git pull https://github.com/spkal/jeopardy
+
 may-10-2015
 Found 60 Occupations as 10, 11 or 12 year. Checked website and found
 these are from Back To School Week games:
