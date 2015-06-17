@@ -49,8 +49,9 @@ jeopardyData <- jcleanData(jeopardyDataRaw)
 ```
 
 Added variables
-* MaxValue
-* Gender
+ * MaxValue
+ * Gender
+ * PlayerId
 
 Analysis
 ---------
