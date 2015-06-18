@@ -48,7 +48,7 @@ jeopardyDataRaw <- jscrapeDirect(id=1:5000)
 jeopardyData <- jcleanData(jeopardyDataRaw)
 ```
 Added variables
- * MaxValue
+ * GameMaxValue
  * Gender
  * PlayerId
 
@@ -70,7 +70,7 @@ Final Winnings
 # name: winnings
 require(dplyr)                                                      
 summary(jeopardyData[jeopardyData$IsWinner, "FinalWinnings"])
-group_by(jeopardyData, MaxValue) %>%
+group_by(jeopardyData, GameMaxValue) %>%
     summarize(MedianWinnings=median(FinalWinnings), 
        AveWinnings=mean(FinalWinnings))
 ```
@@ -82,7 +82,7 @@ filter(jeopardyData, IsWinner) %>%
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalWinnings)) +
     geom_histogram() +
-    facet_grid(MaxValue ~ .)
+    facet_grid(GameMaxValue ~ .)
 
 # Number of wins
 group_by(jeopardyData, PlayerId) %>%
@@ -94,14 +94,14 @@ group_by(jeopardyData, PlayerId) %>%
         coord_flip()
 #
 # Dollar winnings per game
-filter(jeopardyData, Winner.p) %>%
+filter(jeopardyData, IsWinner) %>%
     filter(FinalWinnings < 60000) %>%
     ggplot(aes(x=FinalWinnings)) +
         geom_histogram()
 # Total winnings per player:
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalWinnings)) %>%
     filter(Wins > 0) %>%
     filter( Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
@@ -289,7 +289,7 @@ cat(i, d.jpdy[i,1], "WebID= ", d.jpdy[i,7], "\n", file="dinfo.txt", append=TRUE)
     win2 <- gsub(',','', d.jpdy[i,4])
     d.jpdy$Winnings_2nd_Round[i] <- as.numeric(gsub('[$]','',win2))
     win3 <- gsub(',','', d.jpdy[i,5])
-    d.jpdy$Final_Winnings[i] <- as.numeric(gsub('[$]','',win3))
+    d.jpdy$FinalWinnings[i] <- as.numeric(gsub('[$]','',win3))
     
     #################
     #Find Show

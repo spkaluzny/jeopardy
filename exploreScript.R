@@ -1,7 +1,7 @@
 require(dplyr)
 require(ggplot2)
 summary(jeopardyData[jeopardyData$IsWinner, "FinalWinnings"])
-group_by(jeopardyData, MaxValue) %>%
+group_by(jeopardyData, GameMaxValue) %>%
     summarize(MedianWinnings=median(FinalWinnings), 
        AveWinnings=mean(FinalWinnings))
 filter(jeopardyData, IsWinner) %>% 
@@ -10,7 +10,7 @@ filter(jeopardyData, IsWinner) %>%
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalWinnings)) +
     geom_histogram() +
-    facet_grid(MaxValue ~ .)
+    facet_grid(GameMaxValue ~ .)
 #
 # Number of players in final jeopardy
 nFinal<-

@@ -54,7 +54,7 @@ jeopardyData$Date <- as.Date(
     substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
 # 
 # Doubled values
-jeopardyData$MaxValue <- ifelse(jeopardyData$Date <= "2001-11-23",
+jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date <= "2001-11-23",
     "Max1000", "Max2000")
 #
 # Compute winners - Winner.p
