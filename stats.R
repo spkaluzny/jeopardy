@@ -1,18 +1,18 @@
 # Dates:
 range(jeopardyData$Date)
 # Winnings:
-with(jeopardyData, summary(Final_Winnings[Winner.p]))
+with(jeopardyData, summary(FinalWinnings[IsWinner]))
 # Final Wager:
-with(jeopardyData, summary(abs(Final_Winnings - Winnings_2nd_Round)))
+with(jeopardyData, summary(abs(FinalWinnings - SecondRoundWinnings)))
 # Games played:
-with(jeopardyData, summary(num_times_on_show))
+with(jeopardyData, summary(NumTimesOnShow))
 # Games played by winners:
-with(jeopardyData, summary(num_times_on_show[Winner.p]))
+with(jeopardyData, summary(NumTimesOnShow[IsWinner]))
 # Number of questions answered:
-with(jeopardyData, summary(n.Right + n.Wrong))
+with(jeopardyData, summary(NumRight + NumWrong))
 # Number of questions answered by winners:
-with(jeopardyData[Winner.p,], summary(n.Right + n.Wrong))
+with(jeopardyData[IsWinner, ], summary(NumRight + NumWrong))
 # Percent correct answer:
-with(jeopardyData, summary(n.Right/(n.Right + n.Wrong)*100))
+with(jeopardyData, summary(NumRight/(NumRight + NumWrong)*100))
 # Percent correct answer by winners:
-with(jeopardyData[Winner.p,], summary(n.Right/(n.Right + n.Wrong)*100))
+with(jeopardyData[IWinner, ], summary(NumRight/(NumRight + NumWrong)*100))

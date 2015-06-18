@@ -1,4 +1,4 @@
-nWinners <- sapply(split(jeopardyData$Final_Winnings, jeopardyData$Date),
+nWinners <- sapply(split(jeopardyData$FinalWinnings, jeopardyData$Date),
     function(x) 4 - length(unique(x)))
 indxMultpleWinners <- which(nWinners > 1)
 indx2Winners <- which(nWinners == 2)

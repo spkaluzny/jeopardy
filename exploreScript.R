@@ -1,14 +1,14 @@
 require(dplyr)
 require(ggplot2)
-summary(jeopardyData[jeopardyData$Winner.p, "Final_Winnings"])
+summary(jeopardyData[jeopardyData$IsWinner, "FinalWinnings"])
 group_by(jeopardyData, MaxValue) %>%
-    summarize(MedianWinnings=median(Final_Winnings), 
-       AveWinnings=mean(Final_Winnings))
-filter(jeopardyData, Winner.p) %>% 
-    ggplot(aes(x=Final_Winnings)) +
+    summarize(MedianWinnings=median(FinalWinnings), 
+       AveWinnings=mean(FinalWinnings))
+filter(jeopardyData, IsWinner) %>% 
+    ggplot(aes(x=FinalWinnings)) +
     geom_histogram()
-filter(jeopardyData, Winner.p) %>% 
-    ggplot(aes(x=Final_Winnings)) +
+filter(jeopardyData, IsWinner) %>% 
+    ggplot(aes(x=FinalWinnings)) +
     geom_histogram() +
     facet_grid(MaxValue ~ .)
 #
@@ -18,7 +18,7 @@ function(x) {
    rep(sum(x > 0), 3)
 }
 df <- group_by(jeopardyData, Show) %>%
-    mutate(NumberInFinal = nFinal(Final_Winnings))
+    mutate(NumberInFinal = nFinal(FinalWinnings))
 #
 # State population data
 URL <-
@@ -60,15 +60,15 @@ group_by(jeopardyData, PlayerID) %>%
         coord_flip()
 #
 # Dollar winnings per game
-filter(jeopardyData, Winner.p) %>%
-    filter(Final_Winnings < 60000) %>%
-    ggplot(aes(x=Final_Winnings)) +
+filter(jeopardyData, IsWinner) %>%
+    filter(FinalWinnings < 60000) %>%
+    ggplot(aes(x=FinalWinnings)) +
         geom_histogram()
 #
 # Total winnings per player:
 group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalWinnings)) %>%
     filter(Wins > 0) %>%
     filter( Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
@@ -76,7 +76,7 @@ group_by(jeopardyData, PlayerID) %>%
 # boxplot:    
 group_by(jeopardyData, PlayerID) %>%
     mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(Final_Winnings)) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalWinnings)) %>%
     filter(Wins > 0) %>%
     filter(Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +

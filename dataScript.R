@@ -12,8 +12,42 @@ jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 source("jcleanData.R")
 jeopardyData <- jcleanData(jeopardyDataRaw)
 #
+# Fix names:
+indx <- which(names(jeopardyData) == "num_times_on_show")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "NumTimesOnShow"
+}
+indx <- which(names(jeopardyData) == "first_round_winnings")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "FirstRoundWinnings"
+}
+indx <- which(names(jeopardyData) == "Winnings_2nd_Round")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "SecondRoundWinnings"
+}
+indx <- which(names(jeopardyData) == "Final_Winnings")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "FinalWinnings"
+}
+indx <- which(names(jeopardyData) == "n.Right")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "NumRight"
+}
+indx <- which(names(jeopardyData) == "n.Wrong")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "NumWrong"
+}
+indx <- which(names(jeopardyData) == "DD.Wrong")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "DDWrong"
+}
+indx <- which(names(jeopardyData) == "DD.Right")
+if(length(indx)) {
+    names(jeopardyData)[indx] <- "DDRight"
+}
+
 # Add unique PlayerID and Date:
-jeopardyData$PlayerID <- with(jeopardyData,
+jeopardyData$PlayerId <- with(jeopardyData,
     paste(Name, Occupation, City, State, sep='.'))
 airedIndex <- regexpr(" aired ", jeopardyData$Title)
 jeopardyData$Date <- as.Date(
@@ -38,7 +72,7 @@ function (x)
 }
 library(dplyr)
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(Winner.p = isWinner(Final_Winnings))
+    mutate(IsWinner = isWinner(Final_Winnings))
 jeopardyData <- ungroup(jeopardyData)
 #
 # Number of players in final jeopardy
@@ -49,8 +83,8 @@ function(x) {
 jeopardyData <- group_by(jeopardyData, Show) %>%
     mutate(NumberInFinal = nFinal(Final_Winnings))
 jeopardyData <- ungroup(jeopardyData)
-#                                                                               
+#
 # Number of wins
-jeopardyData <- group_by(jeopardyData, PlayerID) %>%
+jeopardyData <- group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1)
 jeopardyData <- ungroup(jeopardyData)
