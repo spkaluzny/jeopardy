@@ -38,10 +38,10 @@ jeopardyData %>%
     with(table(ShowGender))
 # Gender of contestants
 jeopardyData %>%
-    group_by(PlayerID) %>%
+    group_by(PlayerId) %>%
     summarise(Gender1 = first(Gender)) %>%
     with(table(Gender1))
 jeopardyData %>%
-    group_by(PlayerID) %>%
+    group_by(PlayerId) %>%
     summarise(Gender1 = last(Gender)) %>%
     with(table(Gender1))  # Should be same as value using first
