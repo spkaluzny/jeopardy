@@ -72,7 +72,7 @@ function (x)
 }
 library(dplyr)
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(IsWinner = isWinner(Final_Winnings))
+    mutate(IsWinner = isWinner(FinalWinnings))
 jeopardyData <- ungroup(jeopardyData)
 #
 # Number of players in final jeopardy
@@ -81,7 +81,7 @@ function(x) {
     rep(sum(x > 0), 3)
 }
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(NumberInFinal = nFinal(Final_Winnings))
+    mutate(NumberInFinal = nFinal(FinalWinnings))
 jeopardyData <- ungroup(jeopardyData)
 #
 # Number of wins
