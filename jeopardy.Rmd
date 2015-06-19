@@ -55,7 +55,7 @@ Added variables
 Analysis
 ---------
 The final dataset has `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
-Each represents a single player in a game,
+Each row represents a single player in a game,
 each games consists of 3 rows
 i,e, we have
 `r nrow(jeopardyData)` player observations and
