@@ -1,14 +1,14 @@
 require(dplyr)
 require(ggplot2)
-summary(jeopardyData[jeopardyData$IsWinner, "FinalWinnings"])
+summary(jeopardyData[jeopardyData$IsWinner, "FinalScore"])
 group_by(jeopardyData, GameMaxValue) %>%
-    summarize(MedianWinnings=median(FinalWinnings), 
-       AveWinnings=mean(FinalWinnings))
+    summarize(MedianWinnings=median(FinalScore), 
+       AveWinnings=mean(FinalScore))
 filter(jeopardyData, IsWinner) %>% 
-    ggplot(aes(x=FinalWinnings)) +
+    ggplot(aes(x=FinalScore)) +
     geom_histogram()
 filter(jeopardyData, IsWinner) %>% 
-    ggplot(aes(x=FinalWinnings)) +
+    ggplot(aes(x=FinalScore)) +
     geom_histogram() +
     facet_grid(GameMaxValue ~ .)
 #
@@ -18,7 +18,7 @@ function(x) {
    rep(sum(x > 0), 3)
 }
 df <- group_by(jeopardyData, Show) %>%
-    mutate(NumberInFinal = nFinal(FinalWinnings))
+    mutate(NumberInFinal = nFinal(FinalScore))
 #
 # State population data
 URL <-
@@ -51,7 +51,7 @@ jeopardyData %>% filter(State %in% c(state.name, "D.C.")) %>%
         xlab("State")
 #
 # Number of wins
-group_by(jeopardyData, PlayerID) %>%
+group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins)) %>%
     filter(Wins > 1 & Wins < 19) %>%
@@ -61,22 +61,22 @@ group_by(jeopardyData, PlayerID) %>%
 #
 # Dollar winnings per game
 filter(jeopardyData, IsWinner) %>%
-    filter(FinalWinnings < 60000) %>%
-    ggplot(aes(x=FinalWinnings)) +
+    filter(FinalScore < 60000) %>%
+    ggplot(aes(x=FinalScore)) +
         geom_histogram()
 #
 # Total winnings per player:
-group_by(jeopardyData, PlayerID) %>%
+group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(FinalWinnings)) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
     filter(Wins > 0) %>%
     filter( Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_jitter(position = position_jitter(width = .3))
 # boxplot:    
-group_by(jeopardyData, PlayerID) %>%
+group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(FinalWinnings)) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
     filter(Wins > 0) %>%
     filter(Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +

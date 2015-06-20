@@ -7,7 +7,7 @@ jgetid <- function(id, sleep=1){
 
   # Temporary table which will hold single show's data
   d.temp <- as.data.frame(matrix(NA,nrow=3,ncol=7))
-  colnames(d.temp) <- c("1","2","3","4","5","6","WebID")
+  colnames(d.temp) <- c("1","2","3","4","5","6","WebId")
 
   #THE PRE-GAME
   #Loop to determine which shows are tournaments

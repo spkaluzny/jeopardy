@@ -19,15 +19,15 @@ if(length(indx)) {
 }
 indx <- which(names(jeopardyData) == "first_round_winnings")
 if(length(indx)) {
-    names(jeopardyData)[indx] <- "FirstRoundWinnings"
+    names(jeopardyData)[indx] <- "FirstRoundScore"
 }
 indx <- which(names(jeopardyData) == "Winnings_2nd_Round")
 if(length(indx)) {
-    names(jeopardyData)[indx] <- "SecondRoundWinnings"
+    names(jeopardyData)[indx] <- "SecondRoundScore"
 }
 indx <- which(names(jeopardyData) == "Final_Winnings")
 if(length(indx)) {
-    names(jeopardyData)[indx] <- "FinalWinnings"
+    names(jeopardyData)[indx] <- "FinalScore"
 }
 indx <- which(names(jeopardyData) == "n.Right")
 if(length(indx)) {
@@ -63,16 +63,14 @@ function (x)
 {
     r <- rank(x)
     if (all(r == 2)) {
-        c(4, 4, 4)
+        r <- c(4, 4, 4)
     }
-    else {
-        r
-    }
-    (r == 3) |(r == 2.5) | (r == 4)
+    (r == 3) | (r == 2.5) | (r == 4)
 }
+
 library(dplyr)
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(IsWinner = isWinner(FinalWinnings))
+    mutate(IsWinner = isWinner(FinalScore))
 jeopardyData <- ungroup(jeopardyData)
 #
 # Number of players in final jeopardy
@@ -81,7 +79,7 @@ function(x) {
     rep(sum(x > 0), 3)
 }
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(NumberInFinal = nFinal(FinalWinnings))
+    mutate(NumberInFinal = nFinal(FinalScore))
 jeopardyData <- ungroup(jeopardyData)
 #
 # Number of wins

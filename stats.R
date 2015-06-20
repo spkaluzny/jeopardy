@@ -1,9 +1,9 @@
 # Dates:
 range(jeopardyData$Date)
 # Winnings:
-with(jeopardyData, summary(FinalWinnings[IsWinner]))
+with(jeopardyData, summary(FinalScore[IsWinner]))
 # Final Wager:
-with(jeopardyData, summary(abs(FinalWinnings - SecondRoundWinnings)))
+with(jeopardyData, summary(abs(FinalScore - SecondRoundScore)))
 # Games played:
 with(jeopardyData, summary(NumTimesOnShow))
 # Games played by winners:

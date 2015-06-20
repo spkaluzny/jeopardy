@@ -9,7 +9,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
 
   # Temporary table which will hold single show's data
   d.temp <- as.data.frame(matrix(NA,nrow=3,ncol=7))
-  colnames(d.temp) <- c("Title","2","3","4","5","6","WebID")
+  colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
     m <- 1:4500
@@ -68,7 +68,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   # Extract and Format the Variables
   for (i in 1:dim(d.jpdy)[1]){
 
-cat(i, d.jpdy[i,1], "WebID= ", d.jpdy[i,7], "\n", file="dinfo.txt", append=TRUE)
+cat(i, d.jpdy[i,1], "WebId= ", d.jpdy[i,7], "\n", file="dinfo.txt", append=TRUE)
 
     personInfo <- d.jpdy[i,2]
     personInfoCommaIndex <- gregexpr(',', personInfo)

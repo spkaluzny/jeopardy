@@ -208,7 +208,7 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
         }
     }
     if(drop504) {
-        indx <- which(df$WebID == 504)
+        indx <- which(df$WebId == 504)
         if(length(indx)) {
             df <- df[-indx, ]
         }
