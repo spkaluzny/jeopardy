@@ -92,6 +92,13 @@ jeopardyData <- group_by(jeopardyData, Show) %>%
 jeopardyData <- ungroup(jeopardyData)
 ```
 
+The number of wins for each player was computed as:
+```{r eval = FALSE}
+jeopardyData <- group_by(jeopardyData, PlayerId) %>%
+    mutate(NumberWins = n() - 1)
+jeopardyData <- ungroup(jeopardyData)
+```
+
 ### Gender
 
 To analyze the results based on gender, the gender of each player needed to determined.
@@ -149,12 +156,12 @@ The games were played from
 
 ### Within Games
 
-
 ### Final Winnings
 ```{r}
 # name: winnings
 summary(jeopardyData[jeopardyData$IsWinner, "FinalScore"])
-group_by(jeopardyData, GameMaxValue) %>%
+filter(jeopardyData, IsWinner) %>%
+    group_by(GameMaxValue) %>%
     summarize(MedianWinnings=median(FinalScore), 
        AveWinnings=mean(FinalScore))
 ```
