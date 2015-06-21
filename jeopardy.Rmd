@@ -12,8 +12,14 @@ This is an analysis of data about Jeopardy games that is avilable at http://www.
 The data includes information mainly about the players: names, home city, number of agames played, winnings, etc.
 This analysis does not look at the content of the game questions (answers). 
 
-The Data
---------
+The `dplyr` and `ggplot2` package will be used for the analysis and are loaded here.
+
+```{r}
+library(ggplot2)
+library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
+```
+
+## The Data
 ### Getting the Data
 The data was scraped from the http://www.j-archive.com site using an R function that was modified from https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/. The function, `jscrapeDirect`, is available in the appendix. Only regular Jeopardy games were downloaded, leaving out championships, teen, college, etc tournaments. The `id` argument is a vector of show id's to scrape from the web site.
 
@@ -42,19 +48,96 @@ function, `jcleanData` that could be repeatedly run on the
 `jeopardyRawData` object.
 The `jcleanData` function is listed in the appendix.
 
-Creating the dataset:
-```{r eval = FALSE}
-jeopardyDataRaw <- jscrapeDirect(id=1:5000)
-jeopardyData <- jcleanData(jeopardyDataRaw)
-```
-Added variables
- * GameMaxValue
- * Gender
- * PlayerId
+### Additional Variables
 
-Analysis
----------
-The final dataset has `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
+To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
+
+```{r eval = FALSE}
+jeopardyData$PlayerId <- with(jeopardyData,
+    paste(Name, Occupation, City, State, sep='.'))
+```
+
+A `Date` variable was extracted from information in the `Title` variable:
+
+```{r eval = FALSE}
+airedIndex <- regexpr(" aired ", jeopardyData$Title)
+jeopardyData$Date <- as.Date(
+    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
+```
+
+After November 23, 2001 the game doubled the dollar amounts for each answer.
+A `GameMaxValue` was added to distinguish games before and after the change:
+
+```{r eval = FALSE}
+airedIndex <- regexpr(" aired ", jeopardyData$Title)
+jeopardyData$Date <- as.Date(
+    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
+```
+
+A variable, `IsWinner`, was added to identify the winner(s) in each game (tied final scores result in multiple winners):
+
+```{r eval =FALSE}
+isWinner <-
+function (x)                                                                    
+{
+    r <- rank(x)
+    if (all(r == 2)) {
+        r <- c(4, 4, 4)
+    }
+    (r == 3) | (r == 2.5) | (r == 4)
+}
+
+jeopardyData <- group_by(jeopardyData, Show) %>%
+    mutate(IsWinner = isWinner(FinalScore))
+jeopardyData <- ungroup(jeopardyData)
+```
+
+### Gender
+
+To analyze the results based on gender, the gender of each player needed to determined.
+We used the `gender` package from CRAN.
+The `gender` function from that package takes a first name and returns
+the proportion of males and females with that name
+(along with other attributes).
+We use a cutoff proportion of `0.75` - if the proportion for a gender was
+above the cutoff, we use that gender.
+If it was less, we set the gender to `NA`.
+To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
+
+```{r eval = FALSE}
+library(gender)
+firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
+# Estimate gender using the gender from the gender package
+# Only do the unique firstNames
+uFirstName <- unique(firstName)
+# This takes 232.14 secs on boulder:
+uGenderList <- gender(uFirstName)
+uGender <- sapply(uGenderList, function(x) x$gender)
+#
+# Code "male" -> "M", "female" -> "F"
+uGender <- ifelse(uGender == "male", "M", uGender)
+uGender <- ifelse(uGender == "female", "F", uGender)
+uPropMale <- sapply(uGenderList, function(x) x$proportion_male)
+uPropFemale <- sapply(uGenderList, function(x) x$proportion_female)
+#
+# Only consider gender that has prop. greater than propCutoff,
+# otherwise, declare it as NA
+propCutoff <- 0.75
+uGender <- ifelse((!is.na(uGender) & uGender == "M" &
+    uPropMale < propCutoff), NA, uGender)
+uGender <- ifelse((!is.na(uGender) & uGender == "F" &
+    uPropFemale < propCutoff), NA, uGender)
+mFirstName <- match(firstName, uFirstName)
+jeopardyData$Gender <- uGender[mFirstName]
+```
+We were able to predict gender for `r sum(!is.na(jeopardyData$Gender))`
+players which is
+`r round(sum(!is.na(jeopardyData$Gender)) / nrow(jeopardyData) * 100, 2)` percent.
+
+## Analysis
+
+The final dataset for analysi has
+`r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
 Each row represents a single player in a game,
 each games consists of 3 rows
 i,e, we have
@@ -64,18 +147,18 @@ There are `r length(unique(jeopardyData$PlayerId))` different players.
 The games were played from
 `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
 
-Final Winnings
---------------
+### Within Games
+
+
+### Final Winnings
 ```{r}
 # name: winnings
-require(dplyr)                                                      
 summary(jeopardyData[jeopardyData$IsWinner, "FinalScore"])
 group_by(jeopardyData, GameMaxValue) %>%
     summarize(MedianWinnings=median(FinalScore), 
        AveWinnings=mean(FinalScore))
 ```
 ```{r fig.width=8, fig.height=8}
-require(ggplot2)
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
     geom_histogram()
@@ -93,11 +176,6 @@ group_by(jeopardyData, PlayerId) %>%
         geom_bar(binwidth=0.5) +
         coord_flip()
 #
-# Dollar winnings per game
-filter(jeopardyData, IsWinner) %>%
-    filter(FinalScore < 60000) %>%
-    ggplot(aes(x=FinalScore)) +
-        geom_histogram()
 # Total winnings per player:
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
@@ -116,8 +194,8 @@ group_by(jeopardyData, PlayerId) %>%
         geom_boxplot(aes(group = Wins))
 ```
 
-Players by State
-----------------
+## Players by State
+
 To see if players are equally likely to come from any U.S. state, we want to compare the number of players from each state to the state's population.
 
 State population data was downloaded from the U.S. Census
