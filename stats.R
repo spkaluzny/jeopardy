@@ -16,3 +16,7 @@ with(jeopardyData[IsWinner, ], summary(NumRight + NumWrong))
 with(jeopardyData, summary(NumRight/(NumRight + NumWrong)*100))
 # Percent correct answer by winners:
 with(jeopardyData[IWinner, ], summary(NumRight/(NumRight + NumWrong)*100))
+# DD
+jeopardyData %>%
+    filter(DDWrong + DDRight > 0) %>%
+    mutate(PercentDDRight = DDRight / (DDWrong + DDRight))
