@@ -168,6 +168,52 @@ NFinal
 round(NFinal / sum(NFinal) * 100, 2)
 ```
 
+#### Daily Doubles
+
+There are 3 daily doubles in each game, one in the Jeopardy Round and
+two in the Double Jeopardy round.
+The player who gets the daily double questions 
+can wager as much of their current score on the question.
+
+The percentage of daily doubles that are answered correctly:
+
+```{r}
+TablePercentDDRight <- jeopardyData %>%
+    filter(DDWrong + DDRight > 0) %>%
+    mutate(PercentDDRight = DDRight / (DDWrong + DDRight)) %>%
+    with(table(PercentDDRight))
+names(TablePercentDDRight) <- c("0.0", "0.33", "0.50", "0.67", "1.00")
+TablePercentDDRight
+```
+
+#### Runaways
+
+A runaway game is when at least one player cannot be beat in Final
+Jeopardy.
+This will occur when one player has at least twice the score of each of the
+other players.
+
+```{r}
+isRunaway <- function(score) {
+    score <- sort(score)
+    all(score[3] >= 2*score[-3])
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+    with(c(NumberRunaways=sum(Runaway),
+        PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
+```
+
+How often did Ken Jennings win in a runaway?
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+    with(c(NumberRunaways=sum(Runaway),
+        PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
+```
+
 ### Final Winnings
 ```{r}
 # name: winnings
