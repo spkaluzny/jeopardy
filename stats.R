@@ -20,3 +20,10 @@ with(jeopardyData[IWinner, ], summary(NumRight/(NumRight + NumWrong)*100))
 jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
     mutate(PercentDDRight = DDRight / (DDWrong + DDRight))
+# Number in Final Jeopardy
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    summarise(NumberInFinal = first(NumberInFinal)) %>%
+    with(table(NumberInFinal))
+

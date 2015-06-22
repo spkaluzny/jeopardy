@@ -156,6 +156,18 @@ The games were played from
 
 ### Within Games
 
+The number of players in Final Jeopardy:
+```{r}
+NFinal <- jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    summarise(NumberInFinal = first(NumberInFinal)) %>%
+    with(table(NumberInFinal))
+NFinal
+# Percentage:
+round(NFinal / sum(NFinal) * 100, 2)
+```
+
 ### Final Winnings
 ```{r}
 # name: winnings
