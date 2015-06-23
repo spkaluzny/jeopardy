@@ -6,14 +6,15 @@ output: html_document
 ---
 
 ```{r echo=FALSE}
-jeopardyDataRaw <-readRDS("jeopardyDataRaw.rds")
-jeopardyData <-readRDS("jeopardyData.rds")
+jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
+jeopardyData <- readRDS("jeopardyData.rds")
 ```
 This is an analysis of data about Jeopardy games that is avilable at http://www.j-archive.com/.
 The data includes information mainly about the players: names, home city, number of agames played, winnings, etc.
 This analysis does not look at the content of the game questions (answers). 
 
-The `dplyr` and `ggplot2` package will be used for the analysis and are loaded here.
+The `dplyr` and `ggplot2` package will be used for the analysis
+and are loaded here.
 
 ```{r}
 library(ggplot2)
@@ -31,11 +32,15 @@ jeopardyDataRaw <- jscrapeDirect(id=1:5000)
 ```
 
 ### Cleaning the Data
-The raw scraped data has 7 columns:
+The raw scraped data has 15 columns:
 ```{r}
 names(jeopardyDataRaw)
 ```
-The resulting data needs to be cleaned up.
+
+From these columns additional variables were computed.
+Some variable were named to a consistent and descriptive naming scheme.
+
+The resulting data needed to be cleaned up.
 Changes made include values in the wrong column,
 fixing spelling of states,
 New York city boroughs changed to New York,
@@ -142,6 +147,10 @@ We were able to predict gender for `r sum(!is.na(jeopardyData$Gender))`
 players which is
 `r round(sum(!is.na(jeopardyData$Gender)) / nrow(jeopardyData) * 100, 2)` percent.
 
+The final dataset had 21 variables:
+```{r}
+names(jeopardyData)
+```
 ## Analysis
 
 The final dataset for analysi has
@@ -187,32 +196,6 @@ names(TablePercentDDRight) <- c("0.0", "0.33", "0.50", "0.67", "1.00")
 TablePercentDDRight
 ```
 
-#### Final Jeopary Answers
-
-Distribution of final answers correct in each game.
-Counts those that had no change between Second Round Score and Final Score
-got the final answer wrong.
-```{r}
-finalCorrect <- function(score2, scorefinal) {
-    scoreDiff <- scorefinal - score2
-    sum(scoreDiff > 0)
-}
-jeopardyData %>%
-    group_by(Show) %>%
-    summarise(NumFinalCorrect=finalCorrect(SecondRoundScore, FinalScore)) %>%
-    with(cbind(NumFinalCorrect = 0:3,
-        Count = table(NumFinalCorrect),
-        Percent = round(table(NumFinalCorrect) /
-            sum(table(NumFinalCorrect)) * 100, 2)))
-
-# Method 2
-jeopardyData %>%
-    mutate(ScoreDiff = FinalScore - SecondRoundScore) %>%
-    group_by(Show) %>%
-    summarise(FinalCorrect = sum(ScoreDiff > 0)) %>%
-    with(table(FinalCorrect))
-```
-
 #### Runaways
 
 A runaway game is when at least one player cannot be beat in Final
@@ -233,12 +216,15 @@ jeopardyData %>%
 ```
 
 How often did Ken Jennings win in a runaway?
+
 ```{r}
 jeopardyData %>%
     group_by(Show) %>%
+    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+        %in% PlayerId, all(NumTimesOnShow < 75)) %>%
     summarise(Runaway = isRunaway(SecondRoundScore)) %>%
     with(c(NumberRunaways=sum(Runaway),
-        PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
+        PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
 ```
 
 ### Final Winnings
