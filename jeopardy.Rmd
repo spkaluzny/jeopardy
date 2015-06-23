@@ -6,6 +6,7 @@ output: html_document
 ---
 
 ```{r echo=FALSE}
+jeopardyDataRaw <-readRDS("jeopardyDataRaw.rds")
 jeopardyData <-readRDS("jeopardyData.rds")
 ```
 This is an analysis of data about Jeopardy games that is avilable at http://www.j-archive.com/.
@@ -31,7 +32,7 @@ jeopardyDataRaw <- jscrapeDirect(id=1:5000)
 
 ### Cleaning the Data
 The raw scraped data has 7 columns:
-```{r eval=FALSE}
+```{r}
 names(jeopardyDataRaw)
 ```
 The resulting data needs to be cleaned up.
@@ -184,6 +185,32 @@ TablePercentDDRight <- jeopardyData %>%
     with(table(PercentDDRight))
 names(TablePercentDDRight) <- c("0.0", "0.33", "0.50", "0.67", "1.00")
 TablePercentDDRight
+```
+
+#### Final Jeopary Answers
+
+Distribution of final answers correct in each game.
+Counts those that had no change between Second Round Score and Final Score
+got the final answer wrong.
+```{r}
+finalCorrect <- function(score2, scorefinal) {
+    scoreDiff <- scorefinal - score2
+    sum(scoreDiff > 0)
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(NumFinalCorrect=finalCorrect(SecondRoundScore, FinalScore)) %>%
+    with(cbind(NumFinalCorrect = 0:3,
+        Count = table(NumFinalCorrect),
+        Percent = round(table(NumFinalCorrect) /
+            sum(table(NumFinalCorrect)) * 100, 2)))
+
+# Method 2
+jeopardyData %>%
+    mutate(ScoreDiff = FinalScore - SecondRoundScore) %>%
+    group_by(Show) %>%
+    summarise(FinalCorrect = sum(ScoreDiff > 0)) %>%
+    with(table(FinalCorrect))
 ```
 
 #### Runaways
