@@ -166,6 +166,8 @@ The games were played from
 
 ### Within Games
 
+If a player has a score of 0 or less at the end of the double jeopardy round,
+that player is eleminated from the final jeopardy round.
 The number of players in Final Jeopardy:
 ```{r}
 NFinal <- jeopardyData %>%
@@ -173,9 +175,7 @@ NFinal <- jeopardyData %>%
     mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
     summarise(NumberInFinal = first(NumberInFinal)) %>%
     with(table(NumberInFinal))
-NFinal
-# Percentage:
-round(NFinal / sum(NFinal) * 100, 2)
+cbind(NumberOfPlayers=1:3, Count = NFinal, Percentage = round(NFinal / sum(NFinal) * 100, 2))
 ```
 
 #### Daily Doubles
@@ -225,6 +225,12 @@ jeopardyData %>%
     summarise(Runaway = isRunaway(SecondRoundScore)) %>%
     with(c(NumberRunaways=sum(Runaway),
         PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
+```
+
+#### Comebacks
+How often does the player with the lowest score at the end of the double jeopardy round, win the game?
+
+```{r}
 ```
 
 ### Final Winnings
