@@ -164,10 +164,29 @@ There are `r length(unique(jeopardyData$PlayerId))` different players.
 The games were played from
 `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
 
-### Within Games
+#### Number of Games Played
+The NumTimesOnShow variable increases each time the player is on the show.
+We want to look at the maximum value of NumTimeOnShow for each player:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    with(summary(MaxNumGames))
+```
+Half the players only are on one show.
+The player who was on 75 times:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames == 75) %>%
+    select(PlayerId)
+```
+
+#### Number of Final Jeopardy Players
 
 If a player has a score of 0 or less at the end of the double jeopardy round,
-that player is eleminated from the final jeopardy round.
+that player is eleminated from the final jeopardy round
 The number of players in Final Jeopardy:
 ```{r}
 NFinal <- jeopardyData %>%
