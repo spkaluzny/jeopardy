@@ -207,17 +207,16 @@ can wager as much of their current score on the question.
 The number of daily doubles found by a player:
 ```{r}
 jeopardyData %>%
-    # filter(DDWrong + DDRight > 0) %>%
     mutate(DDCount = DDWrong + DDRight) %>%
-    with(table(DDCount))
+    with(cbind(NumDD = 0:3, DDCount = table(DDCount),
+       Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2))) 
 ```
-The percentage of daily doubles that are answered correctly:
-```{r}
+The percentage of all daily doubles that are answered correctly is
+`r 
 jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
-    mutate(PercentDDRight = DDRight / (DDWrong + DDRight)) %>%
-    with(table(PercentDDRight))
-```
+    summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
+`.
 
 #### Runaways
 
