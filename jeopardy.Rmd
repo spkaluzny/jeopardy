@@ -9,13 +9,15 @@ output: html_document
 jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 jeopardyData <- readRDS("jeopardyData.rds")
 ```
-This is an analysis of data about Jeopardy games that is avilable at http://www.j-archive.com/.
+This is an analysis of data about Jeopardy games that are available at http://www.j-archive.com/.
 The data includes information mainly about the players: names, home city, number of agames played, winnings, etc.
-This analysis does not look at the content of the game questions (answers). 
+This analysis does not look at the content of the game questions (answers)
+which are also available on the site.
 
-The `dplyr` and `ggplot2` package will be used for the analysis
-and are loaded here.
+These document is an exercise an example of data clean up, manipulation
+and exploration using R, mostly with the `dplyr` and `ggplot2` packages.
 
+The packages are loaded here.
 ```{r}
 library(ggplot2)
 library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
@@ -32,7 +34,7 @@ jeopardyDataRaw <- jscrapeDirect(id=1:5000)
 ```
 
 ### Cleaning the Data
-The raw scraped data has 15 columns:
+The scraped data has 15 columns:
 ```{r}
 names(jeopardyDataRaw)
 ```
@@ -42,7 +44,7 @@ Some variable were named to a consistent and descriptive naming scheme.
 
 The resulting data needed to be cleaned up.
 Changes made include values in the wrong column,
-fixing spelling of states,
+spelling error in names of cties and states,
 New York city boroughs changed to New York,
 "now living in ..." and "now stationed at ..."
 changed to the listed location.
@@ -57,11 +59,12 @@ The `jcleanData` function is listed in the appendix.
 ### Additional Variables
 
 To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
-
 ```{r eval = FALSE}
 jeopardyData$PlayerId <- with(jeopardyData,
     paste(Name, Occupation, City, State, sep='.'))
 ```
+Analysis of `PlayerId` indicated that it uniquely identified players
+e.g. show numbers and dates were grouped together.
 
 A `Date` variable was extracted from information in the `Title` variable:
 
@@ -143,9 +146,12 @@ uGender <- ifelse((!is.na(uGender) & uGender == "F" &
 mFirstName <- match(firstName, uFirstName)
 jeopardyData$Gender <- uGender[mFirstName]
 ```
-We were able to predict gender for `r sum(!is.na(jeopardyData$Gender))`
+We were able to predict gender for
+`r with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)))`
 players which is
-`r round(sum(!is.na(jeopardyData$Gender)) / nrow(jeopardyData) * 100, 2)` percent.
+`r
+`r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
+round(sum(!is.na(jeopardyData$Gender)) / nrow(jeopardyData) * 100, 2)` percent.
 
 The final dataset had 21 variables:
 ```{r}
@@ -174,13 +180,22 @@ jeopardyData %>%
     with(summary(MaxNumGames))
 ```
 Half the players only are on one show.
-The player who was on 75 times:
+One player was on 75 times:
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
     mutate(MaxNumGames = max(NumTimesOnShow)) %>%
     filter(MaxNumGames == 75) %>%
-    select(PlayerId)
+    summarise(NumberWins = first(NumberWins))
+```
+
+Leaving out Jennings, the number of games per player:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarize(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames < 75, MaxNumGames > 1) %>%
+    ggplot(aes(x = MaxNumGames)) + geom_bar()
 ```
 
 #### Number of Final Jeopardy Players
@@ -204,7 +219,7 @@ two in the Double Jeopardy round.
 The player who gets the daily double questions 
 can wager as much of their current score on the question.
 
-The number of daily doubles found by a player:
+The number of daily doubles found by a player in a game:
 ```{r}
 jeopardyData %>%
     mutate(DDCount = DDWrong + DDRight) %>%
@@ -256,6 +271,9 @@ How often does the player with the lowest score at the end of the double jeopard
 ```
 
 ### Final Winnings
+Looking at the dollar winnings we need to look separately at games before the
+dollar values doubled and after.
+
 ```{r}
 # name: winnings
 summary(jeopardyData[jeopardyData$IsWinner, "FinalScore"])
@@ -267,13 +285,13 @@ filter(jeopardyData, IsWinner) %>%
 ```{r fig.width=8, fig.height=8}
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
-    geom_histogram()
-filter(jeopardyData, IsWinner) %>% 
-    ggplot(aes(x=FinalScore)) +
     geom_histogram() +
     facet_grid(GameMaxValue ~ .)
+```
 
-# Number of wins
+##### Number of wins
+
+```{r}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins)) %>%
@@ -281,8 +299,9 @@ group_by(jeopardyData, PlayerId) %>%
     ggplot(aes(x=Wins)) +
         geom_bar(binwidth=0.5) +
         coord_flip()
-#
-# Total winnings per player:
+```
+##### Total winnings per player:
+```{r}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
@@ -308,7 +327,7 @@ State population data was downloaded from the U.S. Census
 http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
 The CSV file includes aggregation data at the top and population values for multiple years.
 We only extracted the data for the 50 states and the District of Columbia and only used the 2010 values.
-```{r censusdata}
+```{r cache = TRUE}
 URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
 censusTmpFile <- tempfile()
 download.file(URL, destfile=censusTmpFile)
@@ -321,21 +340,25 @@ To stanbdardize, we computed the number of players per million people in a state
 ```{r}
 CountPlayersByState <- table(jeopardyData$State)
 i51 <- match(stateDF$State, names(CountPlayersByState))
-stateDF$NPlayers <- CountPlayersByState[i51]
+stateDF$NPlayers <- c(CountPlayersByState[i51])
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 ```
 Plots by state:
 ```{r}
-require(ggplot2)
 p1 <- ggplot(data=stateDF, aes(x=NPlayers,
     y=ordered(State, levels=State[order(stateDF$NPlayers)])))
 p1 + geom_point() + xlab("Number of Players") + ylab("State")
 p2 <- ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)])))
 p2 + geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("State")
+stateDF %>%
+  filter(State != "D.C.") %>%
+  ggplot(aes(x=log2(PlayersPerMillion),
+    y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
+    geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("State")
 ```
-Appendix
--------------------------------------------------------
+
+## Appendix
 
 The web scraper function:
 ```{r eval=FALSE}
