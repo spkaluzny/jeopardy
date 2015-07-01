@@ -81,8 +81,3 @@ function(x) {
 jeopardyData <- group_by(jeopardyData, Show) %>%
     mutate(NumberInFinal = nFinal(FinalScore))
 jeopardyData <- ungroup(jeopardyData)
-#
-# Number of wins
-jeopardyData <- group_by(jeopardyData, PlayerId) %>%
-    mutate(NumberWins = n() - 1)
-jeopardyData <- ungroup(jeopardyData)

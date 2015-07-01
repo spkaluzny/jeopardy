@@ -15,6 +15,27 @@ responding to general knowledge clues.
 Their responses must be in the form of a question.
 The daily syndicated version of the show has been on the air since 1984.
 
+#### Game Description
+
+The show has two rounds and a final.
+Each round has 6 categories and within each category there are 5 clues.
+The clues have increasing dollar amounts with a category.
+If a player gives the correct answer to a cluse, that dollar amount
+is added to their score.
+Incorrect answers result in subtraction of that dollar amount.
+
+The final jeopardy clue ends the game.
+The players are told the category and they can wager as much of their
+score.
+The players have 30 seconds to write down their response once the final clue
+is shown.
+Players with a correct response get their wager added to their score,
+incorrect responses result in subtraction of the wager amount.
+The player with the highest score wins that amount in dollars and
+plays in the next day's game against two new players.
+
+#### Purpose
+
 This is an analysis of data about the Jeopardy games.
 The data are available at http://www.j-archive.com/.
 It includes information about the players: names, home city, number of games played, winnings, etc.
@@ -107,13 +128,6 @@ jeopardyData <- group_by(jeopardyData, Show) %>%
 jeopardyData <- ungroup(jeopardyData)
 ```
 
-The number of wins for each player was computed as:
-```{r eval = FALSE}
-jeopardyData <- group_by(jeopardyData, PlayerId) %>%
-    mutate(NumberWins = n() - 1)
-jeopardyData <- ungroup(jeopardyData)
-```
-
 ### Gender
 To analyze the results based on gender, the gender of each player needed to determined.
 We used the `gender` package from CRAN.
@@ -162,7 +176,8 @@ The final dataset had 21 variables:
 names(jeopardyData)
 ```
 ## Analysis
-The final dataset for analysi has
+
+The final dataset for analysis has
 `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
 Each row represents a single player in a game,
 each games consists of 3 rows
@@ -183,33 +198,18 @@ jeopardyData %>%
     with(summary(MaxNumGames))
 ```
 Half the players only are on one show.
-One player was on 75 times:
+One player was on 75 times.
+We will investigate that player later.
+
+The distribution of number of wins:
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    filter(MaxNumGames == 75) %>%
-    summarise(NumberWins = first(NumberWins))
-```
-
-```{r}
-group_by(jeopardyData, PlayerId) %>%
-    mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins)) %>%
-    filter(Wins > 1 & Wins < 19) %>%
-    ggplot(aes(x=Wins)) +
+    summarise(NumberWins = max(NumTimesOnShow) - 1) %>%
+    filter(NumberWins > 1 & NumberWins < 19) %>%
+    ggplot(aes(x=NumberWins)) +
         geom_bar(binwidth=0.5) +
         coord_flip()
-```
-
-Leaving out Jennings, and those that only played on game,
-the number of games per player:
-```{r}
-jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarize(MaxNumGames = max(NumTimesOnShow)) %>%
-    filter(MaxNumGames < 75, MaxNumGames > 1) %>%
-    ggplot(aes(x = MaxNumGames)) + geom_bar()
 ```
 
 #### Number of Final Jeopardy Players
@@ -263,17 +263,6 @@ jeopardyData %>%
         PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
 ```
 
-How often did Ken Jennings win in a runaway?
-
-```{r}
-jeopardyData %>%
-    group_by(Show) %>%
-    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
-        %in% PlayerId, all(NumTimesOnShow < 75)) %>%
-    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
-    with(c(NumberRunaways=sum(Runaway),
-        PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
-```
 
 #### Comebacks
 How often does the player with the lowest score at the end of the double jeopardy round, win the game?
@@ -281,8 +270,8 @@ How often does the player with the lowest score at the end of the double jeopard
 ```{r}
 jeopardyData %>%
     group_by(Show) %>%
-    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore) &&
-        IsWinner)) %>%
+    filter(IsWinner) %>%
+    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
     with(table(IsComeback))
 ```
 
@@ -291,10 +280,12 @@ When looking at the dollar winnings we need to look separately
 at games before the dollar values doubled and after.
 
 ```{r}
-filter(jeopardyData, IsWinner) %>%
+jeopardyData %>%
+    filter(IsWinner) %>%
     group_by(GameMaxValue) %>%
     summarize(AveWinnings=mean(FinalScore),
-        MedianWinnings=median(FinalScore))
+        MedianWinnings=median(FinalScore),
+        MaxWinnings=max(FinalScore))
 ```
 The mean and median winnings are both about doubled
 when the dollar amounts doubled.
@@ -303,7 +294,7 @@ The distribution of the winnings:
 ```{r fig.width=8, fig.height=8}
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
-    geom_histogram() +
+    geom_histogram(binwidth = 1000) +
     facet_grid(GameMaxValue ~ .)
 ```
 
@@ -325,6 +316,31 @@ group_by(jeopardyData, PlayerId) %>%
     filter(Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_boxplot(aes(group = Wins))
+```
+
+### Ken Jennings
+
+The player with longest winning streak, 74 games
+(the 75th game was loss):
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames == 75) %>%
+    summarise(NumberWins = n() - 1)
+```
+
+How often did Ken Jennings win in a runaway?
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+        %in% PlayerId, all(NumTimesOnShow < 75)) %>%
+    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+    with(c(NumberRunaways=sum(Runaway),
+        PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
 ```
 
 ## Players by State
