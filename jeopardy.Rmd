@@ -270,8 +270,8 @@ How often does the player with the lowest score at the end of the double jeopard
 ```{r}
 jeopardyData %>%
     group_by(Show) %>%
-    filter(IsWinner) %>%
     mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
+    filter(IsWinner, IsComeback) %>%
     with(table(IsComeback))
 ```
 
