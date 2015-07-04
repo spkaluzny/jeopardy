@@ -275,6 +275,31 @@ jeopardyData %>%
     with(table(IsComeback))
 ```
 
+#### Ties
+How often does the game end in a tie?
+
+```{r}
+NumWinners <-
+function (x)                                                                    
+{
+    Winners <- 1
+    r <- rank(x)
+    if (all(r == 2)) {
+        Winners <- 3
+    }
+    if(any(r == 2.5)) {
+        Winners <- 2
+    }
+    Winners
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumWinners = sum(IsWinner)) %>%
+    summarise(NumWinners = first(NumWinners)) %>%
+    with(cbind(Winners = 1:3, Count = table(NumWinners),
+        Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
+```
+
 ### Final Winnings
 When looking at the dollar winnings we need to look separately
 at games before the dollar values doubled and after.
