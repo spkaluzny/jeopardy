@@ -188,29 +188,7 @@ There are `r length(unique(jeopardyData$PlayerId))` different players.
 The games were played from
 `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
 
-#### Number of Games Played
-The NumTimesOnShow variable increases each time the player is on the show.
-We want to look at the maximum value of NumTimeOnShow for each player:
-```{r}
-jeopardyData %>%
-    group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    with(summary(MaxNumGames))
-```
-Half the players only are on one show.
-One player was on 75 times.
-We will investigate that player later.
-
-The distribution of number of wins:
-```{r}
-jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarise(NumberWins = max(NumTimesOnShow) - 1) %>%
-    filter(NumberWins > 1 & NumberWins < 19) %>%
-    ggplot(aes(x=NumberWins)) +
-        geom_bar(binwidth=0.5) +
-        coord_flip()
-```
+### The Games
 
 #### Number of Final Jeopardy Players
 If a player has a score of 0 or less at the end of the double jeopardy round,
@@ -263,25 +241,12 @@ jeopardyData %>%
         PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
 ```
 
-
-#### Comebacks
-How often does the player with the lowest score at the end of the double jeopardy round, win the game?
-
-```{r}
-jeopardyData %>%
-    group_by(Show) %>%
-    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
-    filter(IsWinner, IsComeback) %>%
-    with(table(IsComeback))
-```
-
 #### Ties
 How often does the game end in a tie?
 
 ```{r}
 NumWinners <-
-function (x)                                                                    
-{
+function (x) {
     Winners <- 1
     r <- rank(x)
     if (all(r == 2)) {
@@ -298,6 +263,45 @@ jeopardyData %>%
     summarise(NumWinners = first(NumWinners)) %>%
     with(cbind(Winners = 1:3, Count = table(NumWinners),
         Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
+```
+
+#### Comebacks
+How often does the player with the lowest score
+at the end of the double jeopardy round, win the game?
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
+    filter(IsWinner, IsComeback) %>%
+    with(c(Count = sum(IsComeback),
+        Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
+```
+
+### The Players
+
+#### Number of Games Played
+The NumTimesOnShow variable increases each time the player is on the show.
+We want to look at the maximum value of NumTimeOnShow for each player:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    with(summary(MaxNumGames))
+```
+Half the players only are on one show.
+One player was on 75 times.
+We will investigate that player later.
+
+The distribution of number of wins:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(NumberWins = max(NumTimesOnShow) - 1) %>%
+    filter(NumberWins > 1 & NumberWins < 19) %>%
+    ggplot(aes(x=NumberWins)) +
+        geom_bar(binwidth=0.5) +
+        coord_flip()
 ```
 
 ### Final Winnings
@@ -319,7 +323,7 @@ The distribution of the winnings:
 ```{r fig.width=8, fig.height=8}
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
-    geom_histogram(binwidth = 1000) +
+    geom_histogram(binwidth = 2000) +
     facet_grid(GameMaxValue ~ .)
 ```
 
@@ -385,7 +389,7 @@ stateDF <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
     stringsAsFactors=FALSE)
 stateDF[stateDF$State == "District of Columbia", "State"] <- "D.C."
 ```
-To stanbdardize, we computed the number of players per million people in a state:
+To standardize, we computed the number of players per million people in a state:
 ```{r}
 CountPlayersByState <- table(jeopardyData$State)
 i51 <- match(stateDF$State, names(CountPlayersByState))
@@ -403,7 +407,7 @@ p2 + geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("Stat
 stateDF %>%
   filter(State != "D.C.") %>%
   ggplot(aes(x=log2(PlayersPerMillion),
-    y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
+    y=ordered(State, levels=State[order(PlayersPerMillion)]))) +
     geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("State")
 ```
 
