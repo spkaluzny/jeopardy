@@ -190,6 +190,28 @@ The games were played from
 
 ### The Games
 
+#### Answers
+
+There are `6 categories x 5 clues x 2 rounds = 60` clues in each game.
+
+Due ot time limitations, the players may not get to all of the clues.
+The number of of clues attempted in a game by a single player:
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    with(summary(NumAttempted))
+```
+
+The number of of clues attempted in a game by all three players:
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    summarise(NumAttemptedAll = sum(NumAttempted)) %>%
+    with(summary(NumAttemptedAll))
+```
+
 #### Number of Final Jeopardy Players
 If a player has a score of 0 or less at the end of the double jeopardy round,
 that player is eleminated from the final jeopardy round
@@ -301,6 +323,7 @@ filter(jeopardyData, IsWinner) %>%
     geom_histogram(binwidth = 2000) +
     facet_grid(GameMaxValue ~ .)
 ```
+
 ### The Players
 
 #### Number of Games Played
@@ -392,8 +415,8 @@ jeopardyData %>%
 
 ## Players by State
 
-To see if players are equally likely to come from any U.S. state,r
- we want to compare the number of players from each state
+To see if players are equally likely to come from any U.S. state,
+we want to compare the number of players from each state
 to the state's population.
 
 State population data was downloaded from the U.S. Census
