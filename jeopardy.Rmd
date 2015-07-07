@@ -273,38 +273,13 @@ at the end of the double jeopardy round, win the game?
 jeopardyData %>%
     group_by(Show) %>%
     mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
-    filter(IsWinner, IsComeback) %>%
+    filter(IsWinner) %>%
     with(c(Count = sum(IsComeback),
         Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
 ```
 
-### The Players
+#### Dollar Winnings in a Game
 
-#### Number of Games Played
-The NumTimesOnShow variable increases each time the player is on the show.
-We want to look at the maximum value of NumTimeOnShow for each player:
-```{r}
-jeopardyData %>%
-    group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    with(summary(MaxNumGames))
-```
-Half the players only are on one show.
-One player was on 75 times.
-We will investigate that player later.
-
-The distribution of number of wins:
-```{r}
-jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarise(NumberWins = max(NumTimesOnShow) - 1) %>%
-    filter(NumberWins > 1 & NumberWins < 19) %>%
-    ggplot(aes(x=NumberWins)) +
-        geom_bar(binwidth=0.5) +
-        coord_flip()
-```
-
-### Final Winnings
 When looking at the dollar winnings we need to look separately
 at games before the dollar values doubled and after.
 
@@ -326,10 +301,49 @@ filter(jeopardyData, IsWinner) %>%
     geom_histogram(binwidth = 2000) +
     facet_grid(GameMaxValue ~ .)
 ```
+### The Players
 
-##### Total winnings per player:
-
+#### Number of Games Played
+The NumTimesOnShow variable increases each time the player is on the show.
+We want to look at the maximum value of NumTimeOnShow for each player:
 ```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    with(summary(MaxNumGames))
+```
+Half the players only are on one show.
+One player was on 75 times.
+We will investigate that player later.
+
+Looking further at players on for many games:
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames > 9) %>%
+    with(table(MaxNumGames))
+```
+
+The distribution of the number of games by a player,
+leaving out the outliers (players who played more than 10 games)
+as well as players who never won (i.e. only played one game):
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
+    ggplot(aes(x=factor(MaxNumGames))) +
+        geom_bar(binwidth=0.10) +
+        coord_flip()
+```
+
+##### Total Winnings Per Player 
+
+This is over all the games played.
+The number of wins is one less than the number of times on the show.
+
+```{r fig.width=8, fig.height=8}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
@@ -337,7 +351,11 @@ group_by(jeopardyData, PlayerId) %>%
     filter( Wins < 19) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_jitter(position = position_jitter(width = .3))
-# boxplot:    
+```
+
+Looking at boxplots for the same data:
+
+```{r fig.width=8, fig.height=8}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
@@ -374,7 +392,9 @@ jeopardyData %>%
 
 ## Players by State
 
-To see if players are equally likely to come from any U.S. state, we want to compare the number of players from each state to the state's population.
+To see if players are equally likely to come from any U.S. state,r
+ we want to compare the number of players from each state
+to the state's population.
 
 State population data was downloaded from the U.S. Census
 http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
@@ -396,14 +416,21 @@ i51 <- match(stateDF$State, names(CountPlayersByState))
 stateDF$NPlayers <- c(CountPlayersByState[i51])
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 ```
-Plots by state:
-```{r}
+
+Number of players per state;
+
+```{r fig.width=8, fig.height=8}
 p1 <- ggplot(data=stateDF, aes(x=NPlayers,
     y=ordered(State, levels=State[order(stateDF$NPlayers)])))
 p1 + geom_point() + xlab("Number of Players") + ylab("State")
 p2 <- ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)])))
 p2 + geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("State")
+```
+
+Number of players standardized by state's population (on log2 scale):
+
+```{r fig.width=8, fig.height=8}
 stateDF %>%
   filter(State != "D.C.") %>%
   ggplot(aes(x=log2(PlayersPerMillion),
