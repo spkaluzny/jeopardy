@@ -212,19 +212,6 @@ jeopardyData %>%
     with(summary(NumAttemptedAll))
 ```
 
-#### Number of Final Jeopardy Players
-If a player has a score of 0 or less at the end of the double jeopardy round,
-that player is eleminated from the final jeopardy round
-The number of players in Final Jeopardy:
-```{r}
-NFinal <- jeopardyData %>%
-    group_by(Show) %>%
-    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
-    summarise(NumberInFinal = first(NumberInFinal)) %>%
-    with(table(NumberInFinal))
-cbind(NumberOfPlayers=1:3, Count = NFinal, Percentage = round(NFinal / sum(NFinal) * 100, 2))
-```
-
 #### Daily Doubles
 There are 3 daily doubles in each game, one in the Jeopardy Round and
 two in the Double Jeopardy round.
@@ -244,6 +231,19 @@ jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
     summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
 `.
+
+#### Number of Final Jeopardy Players
+If a player has a score of 0 or less at the end of the double jeopardy round,
+that player is eleminated from the final jeopardy round
+The number of players in Final Jeopardy:
+```{r}
+NFinal <- jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    summarise(NumberInFinal = first(NumberInFinal)) %>%
+    with(table(NumberInFinal))
+cbind(NumberOfPlayers=1:3, Count = NFinal, Percentage = round(NFinal / sum(NFinal) * 100, 2))
+```
 
 #### Runaways
 A runaway game is when at least one player cannot be beat in Final
@@ -344,27 +344,30 @@ Looking further at players on for many games:
 jeopardyData %>%
     group_by(PlayerId) %>%
     summarise(MaxNumGames = max(NumTimesOnShow)) %>%
-    filter(MaxNumGames > 9) %>%
-    with(table(MaxNumGames))
+    top_n(6, MaxNumGames)
+    # filter(MaxNumGames > 9) %>%
+    # with(table(MaxNumGames))
 ```
 
 The distribution of the number of games by a player,
 leaving out the outliers (players who played more than 10 games)
 as well as players who never won (i.e. only played one game):
+
 ```{r fig.width=8, fig.height=8}
 jeopardyData %>%
     group_by(PlayerId) %>%
     summarise(MaxNumGames = max(NumTimesOnShow)) %>%
     filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
     ggplot(aes(x=factor(MaxNumGames))) +
-        geom_bar(binwidth=0.10) +
+        geom_bar(binwidth=0.10) + xlab("NumGamesPlayed") +
         coord_flip()
 ```
 
-##### Total Winnings Per Player 
+#### Total Winnings Per Player 
 
 This is over all the games played.
 The number of wins is one less than the number of times on the show.
+We use jitter to better visualize the data in each group:
 
 ```{r fig.width=8, fig.height=8}
 group_by(jeopardyData, PlayerId) %>%
@@ -376,7 +379,7 @@ group_by(jeopardyData, PlayerId) %>%
         geom_jitter(position = position_jitter(width = .3))
 ```
 
-Looking at boxplots for the same data:
+Alternatively, we could use boxplots for the same data:
 
 ```{r fig.width=8, fig.height=8}
 group_by(jeopardyData, PlayerId) %>%
@@ -415,14 +418,21 @@ jeopardyData %>%
 
 ## Players by State
 
+Where do Jeopardy players come from?
+While there are players from countries other than the United States,
+the vast majority are from the U.S.
+
 To see if players are equally likely to come from any U.S. state,
 we want to compare the number of players from each state
 to the state's population.
 
 State population data was downloaded from the U.S. Census
 http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
-The CSV file includes aggregation data at the top and population values for multiple years.
-We only extracted the data for the 50 states and the District of Columbia and only used the 2010 values.
+The CSV file includes aggregation data at the top and population values
+for multiple years.
+We only extracted the data for the 50 states and the District of Columbia
+and only used the 2010 values.
+
 ```{r cache = TRUE}
 URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
 censusTmpFile <- tempfile()
@@ -432,6 +442,7 @@ stateDF <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
     stringsAsFactors=FALSE)
 stateDF[stateDF$State == "District of Columbia", "State"] <- "D.C."
 ```
+
 To standardize, we computed the number of players per million people in a state:
 ```{r}
 CountPlayersByState <- table(jeopardyData$State)
@@ -443,15 +454,34 @@ stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 Number of players per state;
 
 ```{r fig.width=8, fig.height=8}
-p1 <- ggplot(data=stateDF, aes(x=NPlayers,
-    y=ordered(State, levels=State[order(stateDF$NPlayers)])))
-p1 + geom_point() + xlab("Number of Players") + ylab("State")
-p2 <- ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
-    y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)])))
-p2 + geom_point()+ xlab("Number of Players / 1 Million Population") + ylab("State")
+ggplot(data=stateDF, aes(x=NPlayers,
+    y=ordered(State, levels=State[order(stateDF$NPlayers)]))) +
+    geom_point() +
+    xlab("Number of Players") + ylab("State")
+```
+
+In general,
+the bigger the state's population, the more players from that state.
+Texas and Florida have the second and fourth largest population but
+an low number of players:
+
+```{r fig.width=8, fig.height=8}
+ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
+    geom_point() +
+    geom_text(data=subset(stateDF, State %in% c("Texas", "Florida")),
+        aes(Population, NPlayers, label=State, vjust=1))
 ```
 
 Number of players standardized by state's population (on log2 scale):
+
+```{r fig.width=8, fig.height=8}
+ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
+    y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
+    geom_point() +
+    xlab("Number of Players / 1 Million Population") + ylab("State")
+```
+
+The same plot with `D.C.` left out:
 
 ```{r fig.width=8, fig.height=8}
 stateDF %>%
