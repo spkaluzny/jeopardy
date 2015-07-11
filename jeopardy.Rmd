@@ -195,7 +195,11 @@ The games were played from
 There are `6 categories x 5 clues x 2 rounds = 60` clues in each game.
 
 Due ot time limitations, the players may not get to all of the clues.
-The number of of clues attempted in a game by a single player:
+The number of clues attempted in a game by a single player is
+the sum of the number correct (`NumRight`), the number wrong (`NumWrong`),
+the number of daily doubles correct (`DDRight`)
+and the number of daily doubles wrong (`DDWrong`).
+
 ```{r}
 jeopardyData %>%
     group_by(Show) %>%
@@ -203,13 +207,57 @@ jeopardyData %>%
     with(summary(NumAttempted))
 ```
 
-The number of of clues attempted in a game by all three players:
-```{r}
+```{r fig.width=8, fig.height=8}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    summarise(NumAttemptedAll = sum(NumAttempted)) %>%
-    with(summary(NumAttemptedAll))
+    ggplot(aes(x=factor(NumAttempted))) + 
+        geom_bar() + xlab("Number Clues Attempted by a Player")                 
+```
+By gender:
+
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    filter(!is.na(Gender)) %>%
+    ggplot(aes(x=factor(NumAttempted))) + 
+        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        facet_grid(Gender ~ .)
+```
+
+Note that the sum of `NumAttempted` across all three players in a game is not the same
+as the total number of clues tried in that game since after an incorrect response by a players,
+another play can try to answer that same question.
+
+The percentage of clues answers correctly by each player:
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    with(summary(PercentCorrect))
+```
+
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    ggplot(aes(x=PercentCorrect)) + 
+        geom_histogram()
+```
+
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100,
+        NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    ggplot(aes(x=NumAttempted, y=PercentCorrect, color=Gender)) +
+        geom_point() + geom_jitter(position=position_jitter(width=0.5, height=0.5))
 ```
 
 #### Daily Doubles
