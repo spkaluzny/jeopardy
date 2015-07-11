@@ -15,6 +15,8 @@ responding to general knowledge clues.
 Their responses must be in the form of a question.
 The daily syndicated version of the show has been on the air since 1984.
 
+This paper is an analysis about data from the game show.
+
 #### Game Description
 
 The show has two rounds and a final.
@@ -34,11 +36,11 @@ incorrect responses result in subtraction of the wager amount.
 The player with the highest score wins that amount in dollars and
 plays in the next day's game against two new players.
 
-#### Purpose
+#### Purpose of This Analysis
 
-This is an analysis of data about the Jeopardy games.
-The data are available at http://www.j-archive.com/.
-It includes information about the players: names, home city, number of games played, winnings, etc.
+Data from the Jeopary games are are available on the Internet.
+It includes information about the players:
+names, home city, number of games played, winnings, etc.
 This analysis does not look at the content of the game questions (answers)
 which are also available on the site.
 
@@ -53,9 +55,21 @@ library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
 
 ## The Data
 ### Getting the Data
-The data was scraped from the http://www.j-archive.com site using an R function that was modified from https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/. The function, `jscrapeDirect`, is available in the appendix. Only regular Jeopardy games were downloaded, leaving out championships, teen, college, etc tournaments. The `id` argument is a vector of show id's to scrape from the web site.
+The data was scraped from
+the http://www.j-archive.com site
+using an R function that was modified from
+https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/.
+The function, `jscrapeDirect`, is available in the Appendix.
+Only regular Jeopardy games were downloaded,
+leaving out championships, teen, college, etc tournaments.
+The `id` argument is a vector of show id's to scrape from the web site.
 
-To avoid having to get the data multiple times while developing the code, the `jscrapeDirect` function can be used in two steps. First call it with `getDataOnly=TRUE` to get the raw scraped data.  Then call `jscrapeDirect` with the raw data as an input (as the `data` argument) into a second call to `jscrapeDirect` to process the raw data.
+To avoid having to get the data multiple times while developing the code,
+the `jscrapeDirect` function can be used in two steps.
+First call it with `getDataOnly=TRUE` to get the raw scraped data.
+Then call `jscrapeDirect` with the raw data as an input
+(as the `data` argument)
+into a second call to `jscrapeDirect` to process the raw data.
 
 ```{r eval = FALSE}
 jeopardyDataRaw <- jscrapeDirect(id=1:5000)
@@ -122,14 +136,14 @@ function (x)
     }
     (r == 3) | (r == 2.5) | (r == 4)
 }
-
 jeopardyData <- group_by(jeopardyData, Show) %>%
     mutate(IsWinner = isWinner(FinalScore))
 jeopardyData <- ungroup(jeopardyData)
 ```
 
 ### Gender
-To analyze the results based on gender, the gender of each player needed to determined.
+To analyze the results based on gender,
+the gender of each player needed to determined.
 We used the `gender` package from CRAN.
 The `gender` function from that package takes a first name and returns
 the proportion of males and females with that name
@@ -214,6 +228,7 @@ jeopardyData %>%
     ggplot(aes(x=factor(NumAttempted))) + 
         geom_bar() + xlab("Number Clues Attempted by a Player")                 
 ```
+
 By gender:
 
 ```{r fig.width=8, fig.height=8}
@@ -226,8 +241,9 @@ jeopardyData %>%
         facet_grid(Gender ~ .)
 ```
 
-Note that the sum of `NumAttempted` across all three players in a game is not the same
-as the total number of clues tried in that game since after an incorrect response by a players,
+Note that the sum of `NumAttempted` across all three players in a game
+is not the same as the total number of clues tried in that game
+since after an incorrect response by a players,
 another play can try to answer that same question.
 
 The percentage of clues answers correctly by each player:
@@ -261,6 +277,7 @@ jeopardyData %>%
 ```
 
 #### Daily Doubles
+
 There are 3 daily doubles in each game, one in the Jeopardy Round and
 two in the Double Jeopardy round.
 The player who gets the daily double questions 
@@ -281,9 +298,11 @@ jeopardyData %>%
 `.
 
 #### Number of Final Jeopardy Players
+
 If a player has a score of 0 or less at the end of the double jeopardy round,
 that player is eliminated from the final jeopardy round
 The number of players in Final Jeopardy:
+
 ```{r}
 NFinal <- jeopardyData %>%
     group_by(Show) %>%
@@ -294,6 +313,7 @@ cbind(NumberOfPlayers=1:3, Count = NFinal, Percentage = round(NFinal / sum(NFina
 ```
 
 #### Runaways
+
 A runaway game is when at least one player cannot be beat in Final
 Jeopardy.
 This will occur when one player has at least twice the score of each of the
@@ -336,6 +356,7 @@ jeopardyData %>%
 ```
 
 #### Comebacks
+
 How often does the player with the lowest score
 at the end of the double jeopardy round, win the game?
 
@@ -362,6 +383,7 @@ jeopardyData %>%
         MaxWinnings=max(FinalScore)) %>%
     as.data.frame()
 ```
+
 The mean and median winnings are both about doubled
 when the dollar amounts doubled.
 
@@ -376,19 +398,22 @@ filter(jeopardyData, IsWinner) %>%
 ### The Players
 
 #### Number of Games Played
+
 The NumTimesOnShow variable increases each time the player is on the show.
 We want to look at the maximum value of NumTimeOnShow for each player:
+
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
     mutate(MaxNumGames = max(NumTimesOnShow)) %>%
     with(summary(MaxNumGames))
 ```
+
 Half the players only are on one show.
 One player was on 75 times.
 We will investigate that player later.
 
-Looking at the player who won the most games:
+Looking at the players who won the most games:
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
@@ -414,7 +439,8 @@ jeopardyData %>%
 
 #### Total Winnings Per Player 
 
-This is over all the games played.
+Here we look at the total winnings for player over all the
+games he or she played.
 The number of wins is one less than the number of times on the show.
 We use jitter to better visualize the data in each group:
 
@@ -431,7 +457,8 @@ group_by(jeopardyData, PlayerId) %>%
 Alternatively, we could use boxplots for the same data:
 
 ```{r fig.width=8, fig.height=8}
-group_by(jeopardyData, PlayerId) %>%
+jeopardyData %>%
+    group_by(PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
     filter(Wins > 0) %>%
@@ -454,7 +481,7 @@ jeopardyData %>%
         Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
 ```
 
-The gender make up for each game.
+Here we look at the gender distribution for each game.
 There are 4 possible combinations for the 3 contestants:
 FFF, FFM, FMM, and MMM.
 Since the winner plays in the next game,
@@ -579,13 +606,18 @@ ggplot(data=stateDF, aes(x=NPlayers,
 In general,
 the bigger the state's population, the more players from that state.
 Texas and Florida have the second and fourth largest population but
-an low number of players:
+an low number of players and D.C. with a small population,
+has a disproportionate number of players.
 
 ```{r fig.width=8, fig.height=8}
 ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
-    geom_point() +
-    geom_text(data=subset(stateDF, State %in% c("Texas", "Florida")),
-        aes(Population, NPlayers, label=State, vjust=1))
+    geom_point() + xlab("State Population") +
+    geom_text(data=subset(stateDF,
+        State %in% c("New York", "D.C.", "Texas", "Florida")),
+        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.2)) +
+    geom_text(data=subset(stateDF,
+        State %in% c("California")),
+        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8))
 ```
 
 Number of players standardized by state's population (on log2 scale):
