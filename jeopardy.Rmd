@@ -10,7 +10,7 @@ jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 jeopardyData <- readRDS("jeopardyData.rds")
 ```
 
-Jeopardy is a televison quiz show where three contestants compete by
+Jeopardy is a television quiz show where three contestants compete by
 responding to general knowledge clues.
 Their responses must be in the form of a question.
 The daily syndicated version of the show has been on the air since 1984.
@@ -20,7 +20,7 @@ The daily syndicated version of the show has been on the air since 1984.
 The show has two rounds and a final.
 Each round has 6 categories and within each category there are 5 clues.
 The clues have increasing dollar amounts with a category.
-If a player gives the correct answer to a cluse, that dollar amount
+If a player gives the correct answer to a clues, that dollar amount
 is added to their score.
 Incorrect answers result in subtraction of that dollar amount.
 
@@ -72,7 +72,7 @@ Variables were renamed to a consistent and descriptive naming scheme.
 
 The resulting data needed to be cleaned up.
 Changes made include values in the wrong column,
-spelling error in names of cties and states,
+spelling error in names of cities and states,
 New York city boroughs changed to New York,
 "now living in ..." and "now stationed at ..."
 changed to the listed location.
@@ -194,7 +194,7 @@ The games were played from
 
 There are `6 categories x 5 clues x 2 rounds = 60` clues in each game.
 
-Due ot time limitations, the players may not get to all of the clues.
+Due to time limitations, the players may not get to all of the clues.
 The number of clues attempted in a game by a single player is
 the sum of the number correct (`NumRight`), the number wrong (`NumWrong`),
 the number of daily doubles correct (`DDRight`)
@@ -282,7 +282,7 @@ jeopardyData %>%
 
 #### Number of Final Jeopardy Players
 If a player has a score of 0 or less at the end of the double jeopardy round,
-that player is eleminated from the final jeopardy round
+that player is eliminated from the final jeopardy round
 The number of players in Final Jeopardy:
 ```{r}
 NFinal <- jeopardyData %>%
@@ -359,7 +359,8 @@ jeopardyData %>%
     group_by(GameMaxValue) %>%
     summarize(AveWinnings=mean(FinalScore),
         MedianWinnings=median(FinalScore),
-        MaxWinnings=max(FinalScore))
+        MaxWinnings=max(FinalScore)) %>%
+    as.data.frame()
 ```
 The mean and median winnings are both about doubled
 when the dollar amounts doubled.
@@ -387,15 +388,15 @@ Half the players only are on one show.
 One player was on 75 times.
 We will investigate that player later.
 
-Looking further at players on for many games:
+Looking at the player who won the most games:
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
-    summarise(MaxNumGames = max(NumTimesOnShow)) %>%
-    top_n(6, MaxNumGames)
-    # filter(MaxNumGames > 9) %>%
-    # with(table(MaxNumGames))
-```
+    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow)) %>%
+    top_n(6, MaxNumGames) %>%
+    select(Name, MaxNumGames) %>%
+    arrange(desc(MaxNumGames))
+ ```
 
 The distribution of the number of games by a player,
 leaving out the outliers (players who played more than 10 games)
@@ -439,6 +440,44 @@ group_by(jeopardyData, PlayerId) %>%
         geom_boxplot(aes(group = Wins))
 ```
 
+#### Gender
+
+The gender of the
+`r length(unique(jeopardyData$PlayerId))`
+players:
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(Gender1 = first(Gender)) %>%
+    with(cbind(Count=table(Gender1),
+        Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
+```
+
+The gender make up for each game.
+There are 4 possible combinations for the 3 contestants:
+FFF, FFM, FMM, and MMM.
+Since the winner plays in the next game,
+the same player can contribute to many gender tryads.
+
+To compute:
+
+```{r}
+trigen <- function(gen) {
+    if(any(is.na(gen))) {
+      NA_character_
+    } else {
+        paste0(sort(gen), collapse = "")
+    }
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(ShowGender = trigen(Gender)) %>%
+    with(cbind(Count=table(ShowGender),
+        Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2)))
+```
+A lot more games are played with two or more male contestants.
+
 ### Ken Jennings
 
 The player with longest winning streak, 74 games
@@ -450,6 +489,35 @@ jeopardyData %>%
     mutate(MaxNumGames = max(NumTimesOnShow)) %>%
     filter(MaxNumGames == 75) %>%
     summarise(NumberWins = n() - 1)
+```
+
+Ken Jennings won
+`r filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
+        NumTimesOnShow < 75) %>%
+    summarise(TotalWinnings = sum(FinalScore)) %>%
+    format(scientific = FALSE)`
+in his 75 games.
+
+The final scores in the game he lost:
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+        %in% PlayerId, any(NumTimesOnShow == 75)) %>%
+        ungroup() %>%
+        select(Name, FinalScore) %>%
+        arrange(desc(FinalScore))
+```
+
+His winnings by game:
+
+```{r fig.width=8, fig.height=8}
+filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
+    NumTimesOnShow < 75) %>%
+    ggplot(aes(x=Date, y=FinalScore)) + geom_point()
 ```
 
 How often did Ken Jennings win in a runaway?
