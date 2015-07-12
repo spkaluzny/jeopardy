@@ -384,6 +384,7 @@ jeopardyData %>%
     group_by(GameMaxValue) %>%
     summarize(AveWinnings=mean(FinalScore),
         MedianWinnings=median(FinalScore),
+        MinWinnings=min(FinalScore),
         MaxWinnings=max(FinalScore)) %>%
     as.data.frame()
 ```
@@ -391,7 +392,20 @@ jeopardyData %>%
 The mean and median winnings are both about doubled
 when the dollar amounts doubled.
 
-The distribution of the winnings:
+The shows where the winning score was 0:
+
+```{r}
+jeopardyData %>%
+    filter(IsWinner, FinalScore == 0) %>%
+    select(Date, Name, FinalScore) %>%
+    as.data.frame()
+```
+
+In one game, all 3 players won with 0
+and in another game, two players tied with a score of 0.
+
+A visual view of the distribution of the winnings:
+
 ```{r fig.width=8, fig.height=8}
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
