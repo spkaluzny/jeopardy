@@ -245,6 +245,8 @@ jeopardyData %>%
         facet_grid(Gender ~ .)
 ```
 
+Men tend to attempt more questions then women.
+
 Note that the sum of `NumAttempted` across all three players in a game
 is not the same as the total number of clues tried in that game
 since after an incorrect response by a players,
@@ -267,7 +269,17 @@ jeopardyData %>%
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     ggplot(aes(x=PercentCorrect)) + 
-        geom_histogram()
+        geom_histogram(binwidth = 10)
+```
+
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    ggplot(aes(x=PercentCorrect)) + 
+        geom_histogram(binwidth = 10) + facet_grid(Gender ~ .)
 ```
 
 ```{r fig.width=8, fig.height=8}
@@ -278,6 +290,16 @@ jeopardyData %>%
         NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     ggplot(aes(x=NumAttempted, y=PercentCorrect, color=Gender)) +
         geom_point() + geom_jitter(position=position_jitter(width=0.5, height=0.5))
+```
+
+```{r fig.width=8, fig.height=8}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100,
+        NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    ggplot(aes(x=NumAttempted, y=PercentCorrect)) +
+        geom_point() + facet_grid(Gender ~ .)
 ```
 
 #### Daily Doubles
@@ -299,7 +321,7 @@ The percentage of all daily doubles that are answered correctly is
 jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
     summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
-`.
+`percent.
 
 #### Number of Final Jeopardy Players
 
@@ -313,13 +335,23 @@ NFinal <- jeopardyData %>%
     mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
     summarise(NumberInFinal = first(NumberInFinal)) %>%
     with(table(NumberInFinal))
-cbind(NumberOfPlayers=1:3, Count = NFinal, Percentage = round(NFinal / sum(NFinal) * 100, 2))
+cbind(NumberOfPlayers=1:3, Count = NFinal,
+    Percentage = round(NFinal / sum(NFinal) * 100, 2))
+```
+
+The show with only one player left for Final Jeopardy:
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    filter(NumberInFinal == 0) %>%
+    select(Date, Name, SecondRoundScore) %>%
+    as.data.frame()
 ```
 
 #### Runaways
 
-A runaway game is when at least one player cannot be beat in Final
-Jeopardy.
+A runaway game is when one player cannot be beat in Final Jeopardy.
 This will occur when one player has at least twice the score of each of the
 other players.
 
@@ -339,18 +371,6 @@ jeopardyData %>%
 How often does the game end in a tie?
 
 ```{r}
-NumWinners <-
-function (x) {
-    Winners <- 1
-    r <- rank(x)
-    if (all(r == 2)) {
-        Winners <- 3
-    }
-    if(any(r == 2.5)) {
-        Winners <- 2
-    }
-    Winners
-}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(NumWinners = sum(IsWinner)) %>%
@@ -375,7 +395,7 @@ jeopardyData %>%
 
 #### Dollar Winnings in a Game
 
-When looking at the dollar winnings we need to look separately
+When looking at the dollar winnings for a game we need to look separately
 at games before the dollar values doubled and after.
 
 ```{r}
@@ -428,6 +448,7 @@ jeopardyData %>%
 ```
 
 Half the players only are on one show.
+Which is not surprising since two players (usually) do not return.
 One player was on 75 times.
 We will investigate that player later.
 
@@ -583,6 +604,19 @@ Where do Jeopardy players come from?
 While there are players from countries other than the United States,
 the vast majority are from the U.S.
 
+The number of players from each state;
+
+```{r fig.width=8, fig.height=8}
+CountPlayersByState <- table(jeopardyData$State)
+data.frame(State = names(CountPlayersByState),
+    CountPlayersByState = c(CountPlayersByState)) %>%
+    filter(State %in% c(state.name, "D.C."))
+    ggplot(aes(x=CountPlayersByState,
+        y=ordered(State, levels=State[order(CountPlayersByState)]))) +
+        geom_point() + xlab("Number of Players") + ylab("State")
+```
+
+The state with more people tend to have more players on Jeopardy.
 To see if players are equally likely to come from any U.S. state,
 we want to compare the number of players from each state
 to the state's population.
@@ -610,15 +644,6 @@ CountPlayersByState <- table(jeopardyData$State)
 i51 <- match(stateDF$State, names(CountPlayersByState))
 stateDF$NPlayers <- c(CountPlayersByState[i51])
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
-```
-
-Number of players per state;
-
-```{r fig.width=8, fig.height=8}
-ggplot(data=stateDF, aes(x=NPlayers,
-    y=ordered(State, levels=State[order(stateDF$NPlayers)]))) +
-    geom_point() +
-    xlab("Number of Players") + ylab("State")
 ```
 
 In general,
