@@ -225,7 +225,7 @@ jeopardyData %>%
     with(summary(NumAttempted))
 ```
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
@@ -235,7 +235,7 @@ jeopardyData %>%
 
 By gender:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
@@ -261,18 +261,19 @@ jeopardyData %>%
         (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     with(summary(PercentCorrect))
 ```
+A denisty plot of the percent correct answers:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     ggplot(aes(x=PercentCorrect)) + 
-        geom_histogram(binwidth = 10)
+        geom_density()
 ```
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(PercentCorrect =
@@ -282,7 +283,7 @@ jeopardyData %>%
         geom_histogram(binwidth = 10) + facet_grid(Gender ~ .)
 ```
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(PercentCorrect =
@@ -292,7 +293,7 @@ jeopardyData %>%
         geom_point() + geom_jitter(position=position_jitter(width=0.5, height=0.5))
 ```
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(Show) %>%
     mutate(PercentCorrect =
@@ -426,7 +427,7 @@ and in another game, two players tied with a score of 0.
 
 A visual view of the distribution of the winnings:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 filter(jeopardyData, IsWinner) %>% 
     ggplot(aes(x=FinalScore)) +
     geom_histogram(binwidth = 2000) +
@@ -466,7 +467,7 @@ The distribution of the number of games by a player,
 leaving out the outliers (players who played more than 10 games)
 as well as players who never won (i.e. only played one game):
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(PlayerId) %>%
     summarise(MaxNumGames = max(NumTimesOnShow)) %>%
@@ -483,7 +484,7 @@ games he or she played.
 The number of wins is one less than the number of times on the show.
 We use jitter to better visualize the data in each group:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
@@ -495,7 +496,7 @@ group_by(jeopardyData, PlayerId) %>%
 
 Alternatively, we could use boxplots for the same data:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     group_by(PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
@@ -579,7 +580,7 @@ jeopardyData %>%
 
 His winnings by game:
 
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 filter(jeopardyData,
     PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
     NumTimesOnShow < 75) %>%
@@ -607,19 +608,17 @@ the vast majority are from the U.S.
 The number of players from each state;
 
 ```{r fig.width=8, fig.height=8}
-CountPlayersByState <- table(jeopardyData$State)
-data.frame(State = names(CountPlayersByState),
-    CountPlayersByState = c(CountPlayersByState)) %>%
+NPlayers <- table(jeopardyData$State)
+stateDF <- data.frame(State = names(NPlayers),
+    NPlayers = c(NPlayers)) %>%
     filter(State %in% c(state.name, "D.C."))
-    ggplot(aes(x=CountPlayersByState,
-        y=ordered(State, levels=State[order(CountPlayersByState)]))) +
+ggplot(stateDF, aes(x=NPlayers,
+        y=ordered(State, levels=State[order(NPlayers)]))) +
         geom_point() + xlab("Number of Players") + ylab("State")
 ```
 
 The state with more people tend to have more players on Jeopardy.
-To see if players are equally likely to come from any U.S. state,
-we want to compare the number of players from each state
-to the state's population.
+To view more formally, we need state population data.
 
 State population data was downloaded from the U.S. Census
 http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
@@ -633,26 +632,14 @@ URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-0
 censusTmpFile <- tempfile()
 download.file(URL, destfile=censusTmpFile)
 popPipe <- pipe(paste0("sed -n -e '/Alabama/,/Wyoming/p' ", censusTmpFile, " | cut -d'\"' --output-delimiter=\";\" -f1-2 | sed -e 's/\"//' -e 's/^.//' -e 's/,//g'"))
-stateDF <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
+statePop <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
     stringsAsFactors=FALSE)
-stateDF[stateDF$State == "District of Columbia", "State"] <- "D.C."
+statePop[statePop$State == "District of Columbia", "State"] <- "D.C."
+indx51 <- match(stateDF$State, statePop$State)
+stateDF$Population <- statePop[indx51, "Population"]
 ```
 
-To standardize, we computed the number of players per million people in a state:
-```{r}
-CountPlayersByState <- table(jeopardyData$State)
-i51 <- match(stateDF$State, names(CountPlayersByState))
-stateDF$NPlayers <- c(CountPlayersByState[i51])
-stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
-```
-
-In general,
-the bigger the state's population, the more players from that state.
-Texas and Florida have the second and fourth largest population but
-an low number of players and D.C. with a small population,
-has a disproportionate number of players.
-
-```{r fig.width=8, fig.height=8}
+```{r fig.width=8, fig.height=7}
 ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
     geom_point() + xlab("State Population") +
     geom_text(data=subset(stateDF,
@@ -661,6 +648,22 @@ ggplot(data=stateDF, aes(x=Population, y=NPlayers)) +
     geom_text(data=subset(stateDF,
         State %in% c("California")),
         aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8))
+```
+
+In general,
+the bigger the state's population, the more players from that state.
+Texas and Florida have the second and fourth largest population but
+an low number of players and D.C. with a small population,
+has a disproportionate number of players.
+
+To see if players are equally likely to come from any U.S. state,
+we want to compare the number of players from each state
+to the state's population.
+We add a standardized number of players per million people in a state to the
+stateDF dataset:
+
+```{r}
+stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 ```
 
 Number of players standardized by state's population (on log2 scale):
