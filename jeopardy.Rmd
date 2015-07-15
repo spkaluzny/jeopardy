@@ -15,7 +15,7 @@ responding to general knowledge clues.
 Their responses must be in the form of a question.
 The daily syndicated version of the show has been on the air since 1984.
 
-This paper is an analysis about data from the game show.
+This paper is an analysis of data from the game show.
 
 #### Game Description
 
@@ -27,8 +27,7 @@ is added to their score.
 Incorrect answers result in subtraction of that dollar amount.
 
 The final jeopardy clue ends the game.
-The players are told the category and they can wager as much of their
-score.
+The players are told the category and they can wager as much of their score.
 The players have 30 seconds to write down their response once the final clue
 is shown.
 Players with a correct response get their wager added to their score,
@@ -36,22 +35,26 @@ incorrect responses result in subtraction of the wager amount.
 The player with the highest score wins that amount in dollars and
 plays in the next day's game against two new players.
 
-#### Purpose of This Analysis
-
-Data from the Jeopary games are are available on the Internet.
+Data from the Jeopardy games are are available on the Internet.
 It includes information about the players:
 names, home city, number of games played, winnings, etc.
 This analysis does not look at the content of the game questions (answers)
 which are also available on the site.
 
+#### Purpose of This Analysis
+
 This document is an example of data clean up, manipulation
-and exploration using R, mostly with the `dplyr` and `ggplot2` packages.
+and exploration using R.
 The code for all of the data analysis is shown in the document.
 The document is an example of a reproducible analysis.
 All code to recreate the analysis, from getting the data,
 cleaning it, to creating graphics is included.
 
-The key packages are loaded here.
+Most of the analysis was done with the the `dplyr` and `ggplot2` packages.
+We made extensive use of the new pipe operator (`%>%`)
+that was introduced wtih the `dplyr` package.
+
+Those key packages are loaded here.
 ```{r}
 library(ggplot2, quietly= TRUE, warn.conflicts = FALSE)
 library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
@@ -210,7 +213,8 @@ The games were played from
 
 #### Answers
 
-There are `6 categories x 5 clues x 2 rounds = 60` clues in each game.
+There are 6 categories x 5 clues per category x 2 rounds = 60 clues
+in each game.
 
 Due to time limitations, the players may not get to all of the clues.
 The number of clues attempted in a game by a single player is
@@ -245,7 +249,9 @@ jeopardyData %>%
         facet_grid(Gender ~ .)
 ```
 
-Men tend to attempt more questions then women.
+Men tend to attempt more questions then women
+and the range of values is wider for men including
+some that attempt over 50 of the possible questions.
 
 Note that the sum of `NumAttempted` across all three players in a game
 is not the same as the total number of clues tried in that game
@@ -261,7 +267,7 @@ jeopardyData %>%
         (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     with(summary(PercentCorrect))
 ```
-A denisty plot of the percent correct answers:
+A density plot of the percent correct answers:
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
@@ -275,32 +281,13 @@ jeopardyData %>%
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
+    filter(!is.na(Gender)) %>%
     group_by(Show) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     ggplot(aes(x=PercentCorrect)) + 
-        geom_histogram(binwidth = 10) + facet_grid(Gender ~ .)
-```
-
-```{r fig.width=8, fig.height=7}
-jeopardyData %>%
-    group_by(Show) %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100,
-        NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    ggplot(aes(x=NumAttempted, y=PercentCorrect, color=Gender)) +
-        geom_point() + geom_jitter(position=position_jitter(width=0.5, height=0.5))
-```
-
-```{r fig.width=8, fig.height=7}
-jeopardyData %>%
-    group_by(Show) %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100,
-        NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    ggplot(aes(x=NumAttempted, y=PercentCorrect)) +
-        geom_point() + facet_grid(Gender ~ .)
+        geom_density() + facet_grid(Gender ~ .)
 ```
 
 #### Daily Doubles
@@ -345,7 +332,7 @@ The show with only one player left for Final Jeopardy:
 jeopardyData %>%
     group_by(Show) %>%
     mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
-    filter(NumberInFinal == 0) %>%
+    filter(NumberInFinal == 1) %>%
     select(Date, Name, SecondRoundScore) %>%
     as.data.frame()
 ```
