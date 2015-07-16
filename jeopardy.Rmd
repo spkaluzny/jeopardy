@@ -224,14 +224,12 @@ and the number of daily doubles wrong (`DDWrong`).
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     with(summary(NumAttempted))
 ```
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
-    group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     ggplot(aes(x=factor(NumAttempted))) + 
         geom_bar() + xlab("Number Clues Attempted by a Player")                 
@@ -241,7 +239,6 @@ By gender:
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
-    group_by(Show) %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     filter(!is.na(Gender)) %>%
     ggplot(aes(x=factor(NumAttempted))) + 
@@ -262,7 +259,6 @@ The percentage of clues answers correctly by each player:
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     with(summary(PercentCorrect))
@@ -271,7 +267,6 @@ A density plot of the percent correct answers:
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
-    group_by(Show) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
@@ -282,7 +277,6 @@ jeopardyData %>%
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     filter(!is.na(Gender)) %>%
-    group_by(Show) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
@@ -574,6 +568,16 @@ filter(jeopardyData,
     ggplot(aes(x=Date, y=FinalScore)) + geom_point()
 ```
 
+Jennings percent correct in each game:
+
+```{r fig.width=8, fig.height=7}
+filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    with(summary(PercentCorrect))
+```
+    
 How often did Ken Jennings win in a runaway?
 
 ```{r}
