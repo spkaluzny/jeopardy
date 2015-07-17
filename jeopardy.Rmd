@@ -228,6 +228,11 @@ jeopardyData %>%
     with(summary(NumAttempted))
 ```
 
+At least one player only attempted 2 clues and while another dominated
+the game by trying 51.
+
+A graphical view of the number of attempted clues:
+
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
@@ -235,7 +240,7 @@ jeopardyData %>%
         geom_bar() + xlab("Number Clues Attempted by a Player")                 
 ```
 
-By gender:
+The same graph, by gender:
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
@@ -272,6 +277,15 @@ jeopardyData %>%
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     ggplot(aes(x=PercentCorrect)) + 
         geom_density()
+```
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
+        PercentCorrect = (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    filter(PercentCorrect > 99) %>%
+    ggplot(aes(x = as.factor(NumAttempted))) + geom_bar()
 ```
 
 ```{r fig.width=8, fig.height=7}
