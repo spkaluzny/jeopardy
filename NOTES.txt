@@ -1,5 +1,8 @@
 git pull https://github.com/spkal/jeopardy
 
+jul-17-2015
+Consider using ggpairs on the data.
+
 jun-24-2015
 Jeopardy maxes
 ∘ max times on show
