@@ -213,5 +213,27 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
             df <- df[-indx, ]
         }
     }
+    # Names and Occupation mixed:
+    NameMixed <- c(
+        "John Kilby, an owner o",
+        "Chris Falcinelli, an owner o",
+        "Cathy Melocik, an editor fo", 
+        "Brad Rodriguez, an assistant general manager o",
+        "Beverly Jones, an attorney fo", 
+        "Lori Hohenleitner, an executive director fo",
+        "Saidi Chen, an attorney fo", 
+        "Barbara Sheridan, an attorney and law clerk t",
+        "Mark Leinwand, an attorney an", 
+        "Patricia Kelvin, an editor o"
+    )
+    for(nm in NameMixed) {
+        indx <- grep(nm, df$Name)
+        if(length(indx)) {
+            znm <- strsplit(df$Name[indx[1]], ",")
+            df$Name[indx] <- znm[[1]][1]
+            df$Occupation[indx] <- str_trim(paste(znm[[1]][2],
+                df$Occupation[indx]))
+        }
+    }    
     df
 }
