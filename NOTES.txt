@@ -3,6 +3,10 @@ git pull https://github.com/spkal/jeopardy
 jul-17-2015
 Consider using ggpairs on the data.
 
+jul-16-2015
+Name == "Cathy Melocik, an editor fo" (and others with Name, an ....)
+need to be fix
+
 jun-24-2015
 Jeopardy maxes
 ∘ max times on show
