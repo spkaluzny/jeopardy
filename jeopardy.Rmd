@@ -279,6 +279,10 @@ jeopardyData %>%
         geom_density()
 ```
 
+The most common percent correct values are between 82 and 90,
+then it drops off.
+There is a bump at 100 percent.
+
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
@@ -287,6 +291,9 @@ jeopardyData %>%
     filter(PercentCorrect > 99) %>%
     ggplot(aes(x = as.factor(NumAttempted))) + geom_bar()
 ```
+
+Most players who get all questions correct only attmempting a third or
+less of the questions.
 
 ```{r fig.width=8, fig.height=7}
 jeopardyData %>%
@@ -297,6 +304,7 @@ jeopardyData %>%
     ggplot(aes(x=PercentCorrect)) + 
         geom_density() + facet_grid(Gender ~ .)
 ```
+We have the spike at 100 percent for both female and male players.
 
 #### Daily Doubles
 
@@ -305,7 +313,8 @@ two in the Double Jeopardy round.
 The player who gets the daily double questions 
 can wager as much of their current score on the question.
 
-The number of daily doubles found by a player in a game:
+The number of daily doubles found by players in a game:
+
 ```{r}
 jeopardyData %>%
     mutate(DDCount = DDWrong + DDRight) %>%
@@ -317,7 +326,7 @@ The percentage of all daily doubles that are answered correctly is
 jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
     summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
-`percent.
+` percent.
 
 #### Number of Final Jeopardy Players
 
@@ -349,7 +358,7 @@ jeopardyData %>%
 
 A runaway game is when one player cannot be beat in Final Jeopardy.
 This will occur when one player has at least twice the score of each of the
-other players.
+other players at the end of the Double Jeopardy round.
 
 ```{r}
 isRunaway <- function(score) {
@@ -364,7 +373,7 @@ jeopardyData %>%
 ```
 
 #### Ties
-How often does the game end in a tie?
+How often does the game end with multiple winners (i.e. a tie)?
 
 ```{r}
 jeopardyData %>%
@@ -374,6 +383,9 @@ jeopardyData %>%
     with(cbind(Winners = 1:3, Count = table(NumWinners),
         Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
 ```
+
+Most games have only one winner.
+In two games, all three people had the same final score.
 
 #### Comebacks
 
@@ -419,6 +431,8 @@ jeopardyData %>%
 
 In one game, all 3 players won with 0
 and in another game, two players tied with a score of 0.
+Actually, none of the players were considered winners
+since none of these players played in the next day's game.
 
 A visual view of the distribution of the winnings:
 
@@ -429,12 +443,21 @@ filter(jeopardyData, IsWinner) %>%
     facet_grid(GameMaxValue ~ .)
 ```
 
+There are
+`filter(jeopardyData, GameMaxValue == "Max2000") %>% nrow()`
+with GameMaxValue of Max2000
+compared to only
+`filter(jeopardyData, GameMaxValue == "Max1000") %>% nrow()`
+for Max1000.
+It is no surprising that the spread of the FinalScorew values
+is larger for the Max2000 group.
+
 ### The Players
 
 #### Number of Games Played
 
-The NumTimesOnShow variable increases each time the player is on the show.
-We want to look at the maximum value of NumTimeOnShow for each player:
+The `NumTimesOnShow` variable increases each time the player is on the show.
+We want to look at the maximum value of `NumTimeOnShow` for each player:
 
 ```{r}
 jeopardyData %>%
@@ -448,14 +471,29 @@ Which is not surprising since two players (usually) do not return.
 One player was on 75 times.
 We will investigate that player later.
 
-Looking at the players who won the most games:
+Number of games played by gender:
+
+```{r}
+jeopardyData %>%
+    filter(!is.na(Gender)) %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    group_by(Gender) %>%
+    summarise(Min=min(MaxNumGames), Median=median(MaxNumGames),
+        Mean=mean(MaxNumGames), Max=max(MaxNumGames))
+```
+
+Looking at the players who won the most games
+(the top 6, the Date is the date of ther final game):
+
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
-    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow)) %>%
+    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+        Date = max(Date)) %>%
     top_n(6, MaxNumGames) %>%
-    select(Name, MaxNumGames) %>%
-    arrange(desc(MaxNumGames))
+    select(Name, MaxNumGames, Date) %>%
+    arrange(desc(MaxNumGames), desc(Date))
  ```
 
 The distribution of the number of games by a player,
@@ -471,6 +509,8 @@ jeopardyData %>%
         geom_bar(binwidth=0.10) + xlab("NumGamesPlayed") +
         coord_flip()
 ```
+
+Most winners only win once and winning more than 5 games is rare.
 
 #### Total Winnings Per Player 
 
@@ -510,11 +550,18 @@ players:
 
 ```{r}
 jeopardyData %>%
+    filter(!is.na(Gender)) %>%
     group_by(PlayerId) %>%
     summarise(Gender1 = first(Gender)) %>%
     with(cbind(Count=table(Gender1),
         Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
 ```
+
+This is the gender of all the players
+(that we were able to compute the gender for)
+and is close to 50:50.
+At least one third of all of these players will play in more than one game
+(see earlier analysis of number of names played by gender).
 
 Here we look at the gender distribution for each game.
 There are 4 possible combinations for the 3 contestants:
@@ -543,7 +590,7 @@ A lot more games are played with two or more male contestants.
 ### Ken Jennings
 
 The player with longest winning streak, 74 games
-(the 75th game was loss):
+(the 75th game was a loss):
 
 ```{r}
 jeopardyData %>%
@@ -558,8 +605,8 @@ Ken Jennings won
     PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
         NumTimesOnShow < 75) %>%
     summarise(TotalWinnings = sum(FinalScore)) %>%
-    format(scientific = FALSE)`
-in his 75 games.
+    format(scientific = FALSE, big.mark = ",")`
+dollars in his 75 games.
 
 The final scores in the game he lost:
 
@@ -592,7 +639,7 @@ filter(jeopardyData,
     with(summary(PercentCorrect))
 ```
     
-How often did Ken Jennings win in a runaway?
+How often did Jennings win in a runaway?
 
 ```{r}
 jeopardyData %>%
@@ -644,6 +691,8 @@ indx51 <- match(stateDF$State, statePop$State)
 stateDF$Population <- statePop[indx51, "Population"]
 ```
 
+The number of players versus the state population:
+
 ```{r fig.width=8, fig.height=7}
 ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
     geom_point() + xlab("State Population") +
@@ -655,10 +704,10 @@ ggplot(data=stateDF, aes(x=Population, y=NPlayers)) +
         aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8))
 ```
 
-In general,
+As we noted earlier,
 the bigger the state's population, the more players from that state.
 Texas and Florida have the second and fourth largest population but
-an low number of players and D.C. with a small population,
+a low number of players and D.C. with a small population,
 has a disproportionate number of players.
 
 To see if players are equally likely to come from any U.S. state,
@@ -671,7 +720,7 @@ stateDF dataset:
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 ```
 
-Number of players standardized by state's population (on log2 scale):
+The number of players standardized by state's population (on log2 scale):
 
 ```{r fig.width=8, fig.height=8}
 ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
@@ -679,6 +728,10 @@ ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     geom_point() +
     xlab("Number of Players / 1 Million Population") + ylab("State")
 ```
+
+The East coast is very well represented after adjusting for population.
+The Midwest is mostly in the middle and the South and plains states are
+are under represented.
 
 The same plot with `D.C.` left out:
 
