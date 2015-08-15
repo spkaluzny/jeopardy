@@ -192,7 +192,7 @@ players which is
 `r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
 percent of the players.
 
-The final dataset had 21 variables:
+The final dataset had `r ncol(jeopardyData)`  variables:
 ```{r}
 names(jeopardyData)
 ```
@@ -304,6 +304,7 @@ jeopardyData %>%
     ggplot(aes(x=PercentCorrect)) + 
         geom_density() + facet_grid(Gender ~ .)
 ```
+
 We have the spike at 100 percent for both female and male players.
 
 #### Daily Doubles
@@ -399,6 +400,30 @@ jeopardyData %>%
     filter(IsWinner) %>%
     with(c(Count = sum(IsComeback),
         Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
+```
+
+#### Final Jeopardy Stumpers
+
+How often do all the players miss the Final Jeopardy questions?
+The data does not include any specific information about the Final Jeopardy question
+or wager.
+If the `FinalScore` is larger than the `SecondRoundScore`, we know the player answered
+Final Jeopardy correctly. Similarly, if `FinalScore` is less than `SecondRoundScore`,
+their response for Final Jeopardy was incorrect.
+If the `FinalScore` is the same as the `SecondRoundScore`, we only know that the
+player did not wager anything in Final Jeopardy, their response could have been correct or wrong.
+So we only count those who made a wager in Final Jeopardy.
+
+```{r}
+isStumper <- function(score2, score3) {
+    all(score3 < score2)
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter(SecondRoundScore != FinalScore) %>%
+    summarise(IsStumper = isStumper(SecondRoundScore, FinalScore)) %>%
+    with(c(Count = sum(IsStumper), Games = length(IsStumper),
+        Percent = round(sum(IsStumper) / length(IsStumper) * 100, 2)))
 ```
 
 #### Dollar Winnings in a Game
