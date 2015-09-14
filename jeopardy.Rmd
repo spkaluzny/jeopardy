@@ -43,7 +43,7 @@ which are also available on the site.
 
 #### Purpose of This Analysis
 
-This document is an example of data clean up, manipulation
+This document is an example of data acquisition, clean up, manipulation
 and exploration using R.
 The code for all of the data analysis is shown in the document.
 This is an example of a reproducible analysis.
@@ -52,7 +52,7 @@ cleaning it, to creating graphics is included.
 
 This was also an exercise in using the `dplyr` package
 for data cleanup and manipulation and
-the creating graphics with the `ggplot2` package.
+using the `ggplot2` package for creating graphics
 We made extensive use of the new pipe operator (`%>%`)
 that was introduced wtih the `dplyr` package.
 
@@ -200,11 +200,11 @@ names(jeopardyData)
 ```
 ## Analysis
 
-The final dataset for analysis has
-`r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns.
-Each row represents a single player in a game,
-each games consists of 3 rows
-i,e, we have
+The final dataset for analysis has a single player in a game as the basic observation
+i.e.  each row in the data set represents a single player in a game,
+and each games consists of 3 rows.
+So we have
+`r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns which make
 `r nrow(jeopardyData)` player observations and
 `r nrow(jeopardyData) / 3` games.
 There are `r length(unique(jeopardyData$PlayerId))` different players.
@@ -285,9 +285,7 @@ jeopardyData %>%
 ```
 
 The most common percent correct values are between 82 and 90,
-then it drops off.
-There is a bump at 100 percent.
-
+then it drops off but rises again at 100 percent.
 
 Here is the distribution of attempted clues for those who always 
 answer correctly compared to other players. We use a density plot
@@ -322,6 +320,8 @@ jeopardyData %>%
 ```
 
 We have the spike at 100 percent for both female and male players.
+The female players have a more spread out distribution of percent correct
+and their peak is slightly less than the peak for the male players.
 
 #### Daily Doubles
 
@@ -348,7 +348,7 @@ jeopardyData %>%
 #### Number of Final Jeopardy Players
 
 If a player has a score of 0 or less at the end of the double jeopardy round,
-that player is eliminated from the final jeopardy round
+that player is eliminated from the final jeopardy round.
 The number of players in Final Jeopardy:
 
 ```{r}
