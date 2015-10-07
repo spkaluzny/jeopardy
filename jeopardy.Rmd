@@ -44,11 +44,11 @@ which are also available on the site.
 #### Purpose of This Analysis
 
 This document is an example of data acquisition, clean up, manipulation
-and exploration using R.
+and exploration using Open Source R.
 The code for all of the data analysis is shown in the document.
 This is an example of a reproducible analysis.
 All code to recreate the analysis, from getting the data,
-cleaning it, to creating graphics is included.
+cleaning it, computing summaries, to creating graphics is included.
 
 This was also an exercise in using the `dplyr` package
 for data cleanup and manipulation and
@@ -68,7 +68,7 @@ The data was scraped from
 the http://www.j-archive.com site
 using an R function that was modified from
 https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/.
-The function, `jscrapeDirect`, is available in the Appendix.
+The function, `jscrapeDirect,` is available in the Appendix.
 Only regular Jeopardy games were downloaded,
 leaving out championships, teen, college, etc tournaments.
 The `id` argument is a vector of show id's to scrape from the web site.
@@ -128,9 +128,8 @@ After November 23, 2001 the game doubled the dollar amounts for each answer.
 A `GameMaxValue` variable was added to distinguish games before and after the change:
 
 ```{r eval = FALSE}
-airedIndex <- regexpr(" aired ", jeopardyData$Title)
-jeopardyData$Date <- as.Date(
-    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
+jeopardyData$GameMaxValue <- ifelse(jeopardyData$$Date < as.Date("2001-11-23"),
+    "Max1000", "Max2000")
 ```
 
 A variable, `IsWinner`, was added to identify the winner(s) in each game (tied final scores result in multiple winners):
@@ -194,22 +193,23 @@ players which is
 `r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
 percent of the players.
 
+## Final DataSet
 The final dataset had `r ncol(jeopardyData)`  variables:
 ```{r}
 names(jeopardyData)
 ```
-## Analysis
-
-The final dataset for analysis has a single player in a game as the basic observation
+The complete dataset for analysis has a single player in a game as the basic observation
 i.e.  each row in the data set represents a single player in a game,
 and each games consists of 3 rows.
 So we have
 `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns which make
 `r nrow(jeopardyData)` player observations and
 `r nrow(jeopardyData) / 3` games.
-There are `r length(unique(jeopardyData$PlayerId))` different players.
+There are `r length(unique(jeopardyData$PlayerId))` unique players.
 The games were played from
 `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
+
+## Analysis
 
 ### The Games
 
@@ -231,7 +231,7 @@ jeopardyData %>%
 ```
 
 At least one player only attempted 2 clues and while another dominated
-the game by trying 51.
+a game by trying 51.
 
 A graphical view of the number of attempted clues:
 
@@ -436,13 +436,14 @@ isStumper <- function(score2, score3) {
 }
 jeopardyData %>%
     group_by(Show) %>%
-    filter(SecondRoundScore != FinalScore) %>%
+    filter(all(SecondRoundScore != FinalScore)) %>%
     summarise(IsStumper = isStumper(SecondRoundScore, FinalScore)) %>%
     with(c(Count = sum(IsStumper), Games = length(IsStumper),
         Percent = round(sum(IsStumper) / length(IsStumper) * 100, 2)))
 ```
 
 #### Dollar Winnings in a Game
+
 
 When looking at the dollar winnings for a game we need to look separately
 at games before the dollar values doubled and after.
@@ -486,10 +487,10 @@ filter(jeopardyData, IsWinner) %>%
 ```
 
 There are
-`filter(jeopardyData, GameMaxValue == "Max2000") %>% nrow()`
+`r filter(jeopardyData, GameMaxValue == "Max2000") %>% nrow()`
 with GameMaxValue of Max2000
 compared to only
-`filter(jeopardyData, GameMaxValue == "Max1000") %>% nrow()`
+`r filter(jeopardyData, GameMaxValue == "Max1000") %>% nrow()`
 for Max1000.
 It is no surprising that the spread of the FinalScore values
 is larger for the Max2000 group.
@@ -526,7 +527,7 @@ jeopardyData %>%
 ```
 
 Looking at the players who won the most games
-(the top 6, the Date is the date of ther final game):
+(the top 6, the Date is the date of their final game):
 
 ```{r}
 jeopardyData %>%
@@ -558,7 +559,7 @@ Most winners only win once and winning more than 5 games is rare.
 #### Total Winnings Per Player 
 
 Here we look at the total winnings for player over all the
-games he or she played.
+games she or he played.
 The number of wins is one less than the number of times on the show.
 We use jitter to better visualize the data in each group:
 
@@ -718,7 +719,7 @@ ggplot(stateDF, aes(x=NPlayers,
 ```
 
 The state with more people tend to have more players on Jeopardy.
-To view more formally, we need state population data.
+To make more appropriate comparisons, we need state population data.
 
 State population data was downloaded from the U.S. Census
 http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
@@ -779,7 +780,8 @@ ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     ggtitle("Number of Players Standardized by State Population")
 ```
 
-The East coast is very well represented after adjusting for population.
+The East coast and West Coast is very well represented
+after adjusting for population.
 The Midwest is mostly in the middle and the South and plains states are
 are under represented.
 
