@@ -1,7 +1,7 @@
 jgetid <- function(id, sleep=1){
 
   require("XML", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
-  require("reshape", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+  require("plyr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
   # Final table with (eventually) all shows
   d.jpdy <- data.frame()
 
