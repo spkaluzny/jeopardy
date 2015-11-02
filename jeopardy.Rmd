@@ -791,12 +791,18 @@ after adjusting for population.
 The Midwest is mostly in the middle and the South and plains states are
 are under represented.
 
+## R Session Info
+
+```{r}
+sessionInfo()
+```
+
 ## Appendix
 
 The web scraper function:
 ```{r eval=FALSE}
+jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
 
-jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE) {
   require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
   if(is.null(data)) {
   require("XML", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
@@ -810,7 +816,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE) {
   colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
-    m <- 1:5200
+    m <- 1:5300
     id <- jgetid(m, sleep=sleep)
   }
 
@@ -1216,6 +1222,39 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
                 df$Occupation[indx]))
         }
     }    
+    # Fix names:
+    indx <- which(names(df) == "num_times_on_show")
+    if(length(indx)) {
+        names(df)[indx] <- "NumTimesOnShow"
+    }
+    indx <- which(names(df) == "first_round_winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FirstRoundScore"
+    }
+    indx <- which(names(df) == "Winnings_2nd_Round")
+    if(length(indx)) {
+        names(df)[indx] <- "SecondRoundScore"
+    }
+    indx <- which(names(df) == "Final_Winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FinalScore"
+    }
+    indx <- which(names(df) == "n.Right")
+    if(length(indx)) {
+        names(df)[indx] <- "NumRight"
+    }
+    indx <- which(names(df) == "n.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "NumWrong"
+    }
+    indx <- which(names(df) == "DD.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "DDWrong"
+    }
+    indx <- which(names(df) == "DD.Right")
+    if(length(indx)) {
+            names(df)[indx] <- "DDRight"
+    }
     df
 }
 ```
