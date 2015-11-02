@@ -107,6 +107,10 @@ function, `jcleanData` that could be repeatedly run on the
 `jeopardyRawData` object.
 The `jcleanData` function is listed in the appendix.
 
+```{r eval = FALSE}
+jeopardyData <- jcleanData(jeopardyDataRaw)
+```
+
 ### Additional Variables
 To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
 ```{r eval = FALSE}
