@@ -235,5 +235,38 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
                 df$Occupation[indx]))
         }
     }    
+    # Fix names:
+    indx <- which(names(df) == "num_times_on_show")
+    if(length(indx)) {
+        names(df)[indx] <- "NumTimesOnShow"
+    }
+    indx <- which(names(df) == "first_round_winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FirstRoundScore"
+    }
+    indx <- which(names(df) == "Winnings_2nd_Round")
+    if(length(indx)) {
+        names(df)[indx] <- "SecondRoundScore"
+    }
+    indx <- which(names(df) == "Final_Winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FinalScore"
+    }
+    indx <- which(names(df) == "n.Right")
+    if(length(indx)) {
+        names(df)[indx] <- "NumRight"
+    }
+    indx <- which(names(df) == "n.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "NumWrong"
+    }
+    indx <- which(names(df) == "DD.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "DDWrong"
+    }
+    indx <- which(names(df) == "DD.Right")
+    if(length(indx)) {
+            names(df)[indx] <- "DDRight"
+    }
     df
 }

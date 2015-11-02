@@ -7,7 +7,8 @@ output: html_document
 
 ```{r echo=FALSE}
 jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
-jeopardyData <- readRDS("jeopardyData.rds")
+source("jcleanData.R")
+# jeopardyData <- readRDS("jeopardyData.rds")
 ```
 
 Jeopardy is a television quiz show where three contestants compete by
@@ -107,13 +108,13 @@ function, `jcleanData` that could be repeatedly run on the
 `jeopardyRawData` object.
 The `jcleanData` function is listed in the appendix.
 
-```{r eval = FALSE}
+```{r}
 jeopardyData <- jcleanData(jeopardyDataRaw)
 ```
 
 ### Additional Variables
 To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
-```{r eval = FALSE}
+```{r}
 jeopardyData$PlayerId <- with(jeopardyData,
     paste(Name, Occupation, City, State, sep='.'))
 ```
@@ -122,7 +123,7 @@ e.g. show numbers and dates were grouped together.
 
 A `Date` variable was extracted from information in the `Title` variable:
 
-```{r eval = FALSE}
+```{r}
 airedIndex <- regexpr(" aired ", jeopardyData$Title)
 jeopardyData$Date <- as.Date(
     substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
@@ -131,14 +132,14 @@ jeopardyData$Date <- as.Date(
 After November 23, 2001 the game doubled the dollar amounts for each answer.
 A `GameMaxValue` variable was added to distinguish games before and after the change:
 
-```{r eval = FALSE}
-jeopardyData$GameMaxValue <- ifelse(jeopardyData$$Date < as.Date("2001-11-23"),
+```{r}
+jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date < as.Date("2001-11-23"),
     "Max1000", "Max2000")
 ```
 
 A variable, `IsWinner`, was added to identify the winner(s) in each game (tied final scores result in multiple winners):
 
-```{r eval =FALSE}
+```{r}
 isWinner <-
 function (x)                                                                    
 {
@@ -165,7 +166,7 @@ above the cutoff, we use that gender.
 If it was less, we set the gender to `NA`.
 To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
 
-```{r eval = FALSE}
+```{r cache=TRUE}
 library(gender)
 firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
 # Estimate gender using the gender from the gender package
@@ -173,13 +174,14 @@ firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
 uFirstName <- unique(firstName)
 # This takes 232.14 secs on boulder:
 uGenderList <- gender(uFirstName)
-uGender <- sapply(uGenderList, function(x) x$gender)
+# uGender <- sapply(uGenderList, function(x) x$gender)
+uGender <- uGenderList$gender
 #
 # Code "male" -> "M", "female" -> "F"
 uGender <- ifelse(uGender == "male", "M", uGender)
 uGender <- ifelse(uGender == "female", "F", uGender)
-uPropMale <- sapply(uGenderList, function(x) x$proportion_male)
-uPropFemale <- sapply(uGenderList, function(x) x$proportion_female)
+uPropMale <- uGenderList$proportion_male
+uPropFemale <- uGenderList$proportion_female
 #
 # Only consider gender that has prop. greater than propCutoff,
 # otherwise, declare it as NA
