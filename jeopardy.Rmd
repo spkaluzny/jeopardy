@@ -532,18 +532,18 @@ jeopardyData %>%
         Mean=mean(MaxNumGames), Max=max(MaxNumGames))
 ```
 
-Looking at the players who won the most games
-(the top 6, the Date is the date of their final game):
+Looking at the players who won the most games (10 or more),
+the Date is the date of their final game:
 
 ```{r}
 jeopardyData %>%
     group_by(PlayerId) %>%
     summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
         Date = max(Date)) %>%
-    top_n(6, MaxNumGames) %>%
+    filter(MaxNumGames >= 10) %>%
     select(Name, MaxNumGames, Date) %>%
     arrange(desc(MaxNumGames), desc(Date))
- ```
+```
 
 The distribution of the number of games by a player,
 leaving out the outliers (players who played more than 10 games)
@@ -567,14 +567,28 @@ Most winners only win once and winning more than 5 games is rare.
 Here we look at the total winnings for player over all the
 games she or he played.
 The number of wins is one less than the number of times on the show.
-We use jitter to better visualize the data in each group:
+
+Here are the winnings for the players who won 10 or more games:
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+        Date = max(Date), Dollars = sum(FinalScore)) %>%
+    filter(MaxNumGames >= 10) %>%
+    select(Name, MaxNumGames, Date, Dollars) %>%
+    arrange(desc(MaxNumGames), desc(Date))
+```
+
+The total winninges versus number of games played for players who won less than 10 games
+(we use jitter to better visualize the data in each group):
 
 ```{r fig.width=8, fig.height=7}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
     filter(Wins > 0) %>%
-    filter( Wins < 19) %>%
+    filter(Wins < 10) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_jitter(position = position_jitter(width = .3)) +
         ggtitle("Total Amount Won by a Player versus Number of Games Played")
@@ -588,7 +602,7 @@ jeopardyData %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
     filter(Wins > 0) %>%
-    filter(Wins < 19) %>%
+    filter(Wins < 10) %>%
     ggplot(aes(x=Wins, y=Dollars)) +
         geom_boxplot(aes(group = Wins)) +
         ggtitle("Boxplots of Amount Won by a Player versus Number of Games Played")
