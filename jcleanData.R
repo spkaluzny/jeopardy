@@ -1,5 +1,5 @@
 "jcleanData"<-
-function(df, dropPilot=TRUE, drop504=TRUE) {
+function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
     indx <- which(df$City == "Nellis Air Force Base" &
@@ -209,6 +209,12 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
     }
     if(drop504) {
         indx <- which(df$WebId == 504)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop4983) {
+        indx <- which(df$WebId == 4983)
         if(length(indx)) {
             df <- df[-indx, ]
         }
