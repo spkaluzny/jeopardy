@@ -43,18 +43,21 @@ This analysis does not look at the content of the game questions (answers)
 which are also available on the site.
 
 #### Purpose of This Analysis
+This document is an example of a data analysis
+using Open Source R.
 
-This document is an example of data acquisition, clean up, manipulation
-and exploration using Open Source R.
-The code for all of the data analysis is shown in the document.
-This is an example of a reproducible analysis.
+This is a reproducible analysis.
 All code to recreate the analysis, from getting the data,
 cleaning it, computing summaries, to creating graphics is included.
+This means that the analysis can be rerun at a future time after more Jeopardy games have been played
+and the results of those games are posted to the Internet.
+The code for is available on Github at
+[https://github.com/spkal/jeopardy](https://github.com/spkal/jeopardy).
 
-This was also an exercise in using the `dplyr` package
+This is also an exercise in using the `dplyr` package
 for data cleanup and manipulation and
 using the `ggplot2` package for creating graphics
-We made extensive use of the new pipe operator (`%>%`)
+We make extensive use of the new pipe operator (`%>%`)
 that was introduced wtih the `dplyr` package.
 
 Those key packages are loaded here.
@@ -65,10 +68,10 @@ library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
 
 ## The Data
 ### Getting the Data
-The data was scraped from
-the http://www.j-archive.com site
+The data was scraped from the
+[http://www.j-archive.com site](http://www.j-archive.com) site
 using an R function that was modified from
-https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun/.
+[https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun](https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun).
 The function, `jscrapeDirect,` is available in the Appendix.
 Only regular Jeopardy games were downloaded,
 leaving out championships, teen, college, etc tournaments.
@@ -166,23 +169,23 @@ above the cutoff, we use that gender.
 If it was less, we set the gender to `NA`.
 To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
 
-```{r cache=TRUE}
+```{r}
 library(gender)
 firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
 # Estimate gender using the gender from the gender package
 # Only do the unique firstNames
 uFirstName <- unique(firstName)
-# This takes 232.14 secs on boulder:
-uGenderList <- gender(uFirstName)
-# uGender <- sapply(uGenderList, function(x) x$gender)
-uGender <- uGenderList$gender
+uGenderDF <- gender(uFirstName)
+# Extract gender and unique first names that gender can recognize:
+uGender <- uGenderDF$gender
+uFirstName <- uGenderDF$name
 #
-# Code "male" -> "M", "female" -> "F"
+# Code "male" as "M", "female" as "F"
 uGender <- ifelse(uGender == "male", "M", uGender)
 uGender <- ifelse(uGender == "female", "F", uGender)
-uPropMale <- uGenderList$proportion_male
-uPropFemale <- uGenderList$proportion_female
 #
+uPropMale <- uGenderDF$proportion_male
+uPropFemale <- uGenderDF$proportion_female
 # Only consider gender that has prop. greater than propCutoff,
 # otherwise, declare it as NA
 propCutoff <- 0.75
@@ -367,7 +370,7 @@ cbind(NumberOfPlayers=1:3, Count = NFinal,
     Percentage = round(NFinal / sum(NFinal) * 100, 2))
 ```
 
-The show with only one player left for Final Jeopardy:
+The shows with only one player left for Final Jeopardy:
 ```{r}
 jeopardyData %>%
     group_by(Show) %>%
@@ -748,7 +751,7 @@ for multiple years.
 We only extracted the data for the 50 states and the District of Columbia
 and only used the 2010 values.
 
-```{r cache = TRUE}
+```{r}
 URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
 censusTmpFile <- tempfile()
 download.file(URL, destfile=censusTmpFile)
@@ -784,7 +787,7 @@ To see if players are equally likely to come from any U.S. state,
 we want to compare the number of players from each state
 to the state's population.
 We add a standardized number of players per million people in a state to the
-stateDF dataset:
+`stateDF` dataset:
 
 ```{r}
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
@@ -803,7 +806,7 @@ ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
 The East coast and West Coast is very well represented
 after adjusting for population.
 The Midwest is mostly in the middle and the South and plains states are
-are under represented.
+under represented.
 
 ## R Session Info
 
