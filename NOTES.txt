@@ -1,5 +1,11 @@
 git pull https://github.com/spkal/jeopardy
 
+apr-01-2018
+The census population by state data,
+http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv
+is no longer available. Copy-and-pasted data from a Census web site search
+to create pop_by_state_2017.csv
+
 jul-17-2015
 Consider using ggpairs on the data.
 

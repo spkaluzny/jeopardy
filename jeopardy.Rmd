@@ -558,7 +558,8 @@ jeopardyData %>%
     summarise(MaxNumGames = max(NumTimesOnShow)) %>%
     filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
     ggplot(aes(x=factor(MaxNumGames))) +
-        geom_bar(binwidth=0.10) + xlab("NumGamesPlayed") +
+        # geom_bar(binwidth=0.10, stat="count") + xlab("NumGamesPlayed") +
+        geom_bar() + xlab("NumGamesPlayed") +
         coord_flip() +
         ggtitle("Counts of Number of Games Played by a Player")
 ```
@@ -752,12 +753,13 @@ We only extracted the data for the 50 states and the District of Columbia
 and only used the 2010 values.
 
 ```{r}
-URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
-censusTmpFile <- tempfile()
-download.file(URL, destfile=censusTmpFile)
-popPipe <- pipe(paste0("sed -n -e '/Alabama/,/Wyoming/p' ", censusTmpFile, " | cut -d'\"' --output-delimiter=\";\" -f1-2 | sed -e 's/\"//' -e 's/^.//' -e 's/,//g'"))
-statePop <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
-    stringsAsFactors=FALSE)
+# URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
+# censusTmpFile <- tempfile()
+# download.file(URL, destfile=censusTmpFile)
+# popPipe <- pipe(paste0("sed -n -e '/Alabama/,/Wyoming/p' ", censusTmpFile, " | cut -d'\"' --output-delimiter=\";\" -f1-2 | sed -e 's/\"//' -e 's/^.//' -e 's/,//g'"))
+# statePop <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
+#     stringsAsFactors=FALSE)
+statePop <- read.csv("pop_by_state_2017.csv", stringsAsFactors=FALSE)
 statePop[statePop$State == "District of Columbia", "State"] <- "D.C."
 indx51 <- match(stateDF$State, statePop$State)
 stateDF$Population <- statePop[indx51, "Population"]
