@@ -532,7 +532,8 @@ jeopardyData %>%
     mutate(MaxNumGames = max(NumTimesOnShow)) %>%
     group_by(Gender) %>%
     summarise(Min=min(MaxNumGames), Median=median(MaxNumGames),
-        Mean=mean(MaxNumGames), Max=max(MaxNumGames))
+        Mean=mean(MaxNumGames), Max=max(MaxNumGames)) %>%
+	as.data.frame()
 ```
 
 Looking at the players who won the most games (10 or more),
@@ -545,7 +546,8 @@ jeopardyData %>%
         Date = max(Date)) %>%
     filter(MaxNumGames >= 10) %>%
     select(Name, MaxNumGames, Date) %>%
-    arrange(desc(MaxNumGames), desc(Date))
+    arrange(desc(MaxNumGames), desc(Date)) %>%
+	as.data.frame()
 ```
 
 The distribution of the number of games by a player,
@@ -581,7 +583,8 @@ jeopardyData %>%
         Date = max(Date), Dollars = sum(FinalScore)) %>%
     filter(MaxNumGames >= 10) %>%
     select(Name, MaxNumGames, Date, Dollars) %>%
-    arrange(desc(MaxNumGames), desc(Date))
+    arrange(desc(MaxNumGames), desc(Date)) %>%
+	as.data.frame()
 ```
 
 The total winninges versus number of games played for players who won less than 10 games
@@ -653,7 +656,8 @@ jeopardyData %>%
     group_by(Show) %>%
     summarise(ShowGender = trigen(Gender)) %>%
     with(cbind(Count=table(ShowGender),
-        Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2)))
+        Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
+	knitr::kable(padding=0)
 ```
 A lot more games are played with two or more male contestants.
 
@@ -667,7 +671,8 @@ jeopardyData %>%
     group_by(PlayerId) %>%
     mutate(MaxNumGames = max(NumTimesOnShow)) %>%
     filter(MaxNumGames == 75) %>%
-    summarise(NumberWins = n() - 1)
+    summarise(NumberWins = n() - 1) %>%
+	as.data.frame()
 ```
 
 Ken Jennings won
@@ -675,6 +680,7 @@ Ken Jennings won
     PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
         NumTimesOnShow < 75) %>%
     summarise(TotalWinnings = sum(FinalScore)) %>%
+	pull() %>%
     format(scientific = FALSE, big.mark = ",")`
 dollars in his 75 games.
 
@@ -687,7 +693,8 @@ jeopardyData %>%
         %in% PlayerId, any(NumTimesOnShow == 75)) %>%
         ungroup() %>%
         select(Name, FinalScore) %>%
-        arrange(desc(FinalScore))
+        arrange(desc(FinalScore)) %>%
+		as.data.frame()
 ```
 
 His winnings by game:
