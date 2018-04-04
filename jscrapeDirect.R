@@ -13,7 +13,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
-    m <- 1:5300
+    m <- 1:5950
     id <- jgetid(m, sleep=sleep)
   }
 
@@ -28,6 +28,11 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
     doc <- try(htmlParse(url, error = function(...){}))
 
     r <- xmlRoot(doc)
+
+    # Save game name:
+    cat(k, xmlValue(r[[2]][[4]][[4]]), "\n",
+      file="xmlValuer244.txt", append=TRUE)
+    
     tables <- getNodeSet(doc, "//table")
 
     cat(k, "\n", file="k.txt", append=TRUE)

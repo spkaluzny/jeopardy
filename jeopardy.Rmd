@@ -85,7 +85,7 @@ Then call `jscrapeDirect` with the raw data as an input
 into a second call to `jscrapeDirect` to process the raw data.
 
 ```{r eval = FALSE}
-jeopardyDataRaw <- jscrapeDirect(id=1:5200)
+jeopardyDataRaw <- jscrapeDirect(id=1:5950)
 ```
 
 ### Cleaning the Data
@@ -842,7 +842,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
-    m <- 1:5300
+    m <- 1:5950
     id <- jgetid(m, sleep=sleep)
   }
 
@@ -1012,7 +1012,7 @@ cat(i, d.jpdy[i,1], "WebId= ", d.jpdy[i,7], "\n", file="dinfo.txt", append=TRUE)
 The data cleaning function:
 ```{r eval=FALSE}
 "jcleanData"<-
-function(df, dropPilot=TRUE, drop504=TRUE) {
+function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
     indx <- which(df$City == "Nellis Air Force Base" &
@@ -1222,6 +1222,12 @@ function(df, dropPilot=TRUE, drop504=TRUE) {
     }
     if(drop504) {
         indx <- which(df$WebId == 504)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop4983) {
+        indx <- which(df$WebId == 4983)
         if(length(indx)) {
             df <- df[-indx, ]
         }
