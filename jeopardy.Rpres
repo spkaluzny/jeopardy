@@ -1,0 +1,1296 @@
+Analysis of Jeopardy Games
+==========================
+author: Stephen Kaluzny
+date: `r format(Sys.time(), '%d %B, %Y')`
+autosize: true
+---
+
+```{r echo=FALSE}
+jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
+source("jcleanData.R")
+# jeopardyData <- readRDS("jeopardyData.rds")
+```
+
+Jeopardy - The Game
+===================
+Jeopardy is a television quiz show where three contestants compete by
+responding to general knowledge clues.
+Their responses must be in the form of a question.
+The daily syndicated version of the show has been on the air since 1984.
+
+Game Description
+================
+The show has two rounds and a final.
+Each round has 6 categories and within each category there are 5 clues.
+The clues have increasing dollar amounts with a category.
+If a player gives the correct answer to a clues, that dollar amount
+is added to their score.
+Incorrect answers result in subtraction of that dollar amount.
+
+The final jeopardy clue ends the game.
+The players are told the category and they can wager as much of their score.
+The players have 30 seconds to write down their response once the final clue
+is shown.
+Players with a correct response get their wager added to their score,
+incorrect responses result in subtraction of the wager amount.
+The player with the highest score wins that amount in dollars and
+plays in the next day's game against two new players.
+
+T
+Data from the Jeopardy games are are available on the Internet.
+It includes information about the players:
+names, home city, number of games played, winnings, etc.
+This analysis does not look at the content of the game questions (answers)
+which are also available on the site.
+
+Purpose of This Analysis
+========================
+This document is an example of a data analysis
+using Open Source R.
+
+This is a reproducible analysis.
+All code to recreate the analysis, from getting the data,
+cleaning it, computing summaries, to creating graphics is included.
+This means that the analysis can be rerun at a future time after more Jeopardy games have been played
+and the results of those games are posted to the Internet.
+The code for is available on Github at
+[https://github.com/spkal/jeopardy](https://github.com/spkal/jeopardy).
+
+This is also an exercise in using the `dplyr` package
+for data cleanup and manipulation and
+using the `ggplot2` package for creating graphics
+We make extensive use of the new pipe operator (`%>%`)
+that was introduced wtih the `dplyr` package.
+
+Those key packages are loaded here.
+```{r}
+library(ggplot2, quietly= TRUE, warn.conflicts = FALSE)
+library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
+```
+
+The Data
+========
+- The data was scraped from the
+[http://www.j-archive.com site](http://www.j-archive.com) site
+using an R function that was modified from
+[https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun](https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun).
+- Only regular Jeopardy games were downloaded,
+leaving out championships, teen, college, etc tournaments.
+
+```{r eval = FALSE}
+jeopardyDataRaw <- jscrapeDirect(id=1:5950)
+```
+
+Cleaning the Data
+=================
+The scraped data has 15 columns:
+```{r}
+names(jeopardyDataRaw)
+```
+From these columns additional variables were computed.
+Variables were renamed to a consistent and descriptive naming scheme.
+
+The resulting data needed to be cleaned up.
+Changes made include values in the wrong column,
+spelling error in names of cities and states,
+New York city boroughs changed to New York,
+"now living in ..." and "now stationed at ..."
+changed to the listed location.
+The cleaning was an iterative process,
+looking at summaries of the data, finding more errors,
+making corrections.
+The clean up operations were all encapsulate in a single
+function, `jcleanData` that could be repeatedly run on the
+`jeopardyRawData` object.
+The `jcleanData` function is listed in the appendix.
+
+```{r}
+jeopardyData <- jcleanData(jeopardyDataRaw)
+```
+
+### Additional Variables
+To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
+```{r}
+jeopardyData$PlayerId <- with(jeopardyData,
+    paste(Name, Occupation, City, State, sep='.'))
+```
+Analysis of `PlayerId` indicated that it uniquely identified players
+e.g. show numbers and dates were grouped together.
+
+A `Date` variable was extracted from information in the `Title` variable:
+
+```{r}
+airedIndex <- regexpr(" aired ", jeopardyData$Title)
+jeopardyData$Date <- as.Date(
+    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
+```
+
+Winning Amount
+==============
+After November 23, 2001 the game doubled the dollar amounts for each answer.
+A `GameMaxValue` variable was added to distinguish games before and after the change:
+
+```{r}
+jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date < as.Date("2001-11-23"),
+    "Max1000", "Max2000")
+```
+
+The Winner
+==========
+A variable, `IsWinner`, was added to identify the winner(s) in each game (tied final scores result in multiple winners):
+
+```{r}
+isWinner <-
+function (x)                                                                    
+{
+    r <- rank(x)
+    if (all(r == 2)) {
+        r <- c(4, 4, 4)
+    }
+    (r == 3) | (r == 2.5) | (r == 4)
+}
+jeopardyData <- group_by(jeopardyData, Show) %>%
+    mutate(IsWinner = isWinner(FinalScore))
+jeopardyData <- ungroup(jeopardyData)
+```
+
+Gender
+======
+To analyze the results based on gender,
+the gender of each player needed to determined.
+We used the `gender` package from CRAN.
+The `gender` function from that package takes a first name and returns
+the proportion of males and females with that name
+(along with other attributes).
+We use a cutoff proportion of `0.75` - if the proportion for a gender was
+above the cutoff, we use that gender.
+If it was less, we set the gender to `NA`.
+To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
+
+```{r}
+library(gender)
+firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
+# Estimate gender using the gender from the gender package
+# Only do the unique firstNames
+uFirstName <- unique(firstName)
+uGenderDF <- gender(uFirstName)
+# Extract gender and unique first names that gender can recognize:
+uGender <- uGenderDF$gender
+uFirstName <- uGenderDF$name
+#
+# Code "male" as "M", "female" as "F"
+uGender <- ifelse(uGender == "male", "M", uGender)
+uGender <- ifelse(uGender == "female", "F", uGender)
+#
+uPropMale <- uGenderDF$proportion_male
+uPropFemale <- uGenderDF$proportion_female
+# Only consider gender that has prop. greater than propCutoff,
+# otherwise, declare it as NA
+propCutoff <- 0.75
+uGender <- ifelse((!is.na(uGender) & uGender == "M" &
+    uPropMale < propCutoff), NA, uGender)
+uGender <- ifelse((!is.na(uGender) & uGender == "F" &
+    uPropFemale < propCutoff), NA, uGender)
+mFirstName <- match(firstName, uFirstName)
+jeopardyData$Gender <- uGender[mFirstName]
+```
+We were able to predict gender for
+`r with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)))`
+players which is
+`r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
+percent of the players.
+
+Final DataSet
+=============
+The final dataset had `r ncol(jeopardyData)`  variables:
+```{r}
+names(jeopardyData)
+```
+The complete dataset for analysis has a single player in a game as the basic observation
+i.e.  each row in the data set represents a single player in a game,
+and each games consists of 3 rows.
+So we have
+`r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns which make
+`r nrow(jeopardyData)` player observations and
+`r nrow(jeopardyData) / 3` games.
+There are `r length(unique(jeopardyData$PlayerId))` unique players.
+The games were played from
+`r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
+
+Answers
+=======
+
+There are 6 categories x 5 clues per category x 2 rounds = 60 clues
+in each game.
+
+Due to time limitations, the players may not get to all of the clues.
+The number of clues attempted in a game by a single player is
+the sum of the number correct (`NumRight`), the number wrong (`NumWrong`),
+the number of daily doubles correct (`DDRight`)
+and the number of daily doubles wrong (`DDWrong`).
+
+```{r}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    with(summary(NumAttempted))
+```
+
+At least one player only attempted 2 clues and while another dominated
+a game by trying 51.
+
+A graphical view of the number of attempted clues:
+==================================================
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    ggplot(aes(x=factor(NumAttempted))) + 
+        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        ggtitle("Distribution of Number of Clues Attempted by a Player")
+```
+
+The same graph, by gender
+==========================
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    filter(!is.na(Gender)) %>%
+    ggplot(aes(x=factor(NumAttempted))) + 
+        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        facet_grid(Gender ~ .) +
+        ggtitle("Distribution of Clues Attempted by Gender")
+
+```
+
+Men tend to attempt more questions then women
+and the range of values is wider for men including
+some that attempt over 50 of the possible questions.
+
+Note that the sum of `NumAttempted` across all three players in a game
+is not the same as the total number of clues tried in that game
+since after an incorrect response by a players,
+another play can try to answer that same question.
+
+The percentage of clues answers correctly
+=========================================
+
+```{r}
+jeopardyData %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    with(summary(PercentCorrect))
+```
+
+A density plot of the percent correct answers:
+=============================================
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    ggplot(aes(x=PercentCorrect)) + 
+        geom_density()
+```
+
+The most common percent correct values are between 82 and 90,
+then it drops off but rises again at 100 percent.
+
+Here is the distribution of attempted clues for those who always 
+answer correctly compared to other players. We use a density plot
+instead of counts since the total numbers in each group are vastly
+different.
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
+        PercentCorrect = (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100,
+        AlwaysRight = (PercentCorrect > 99)) %>%
+    ggplot(aes(x = NumAttempted, color=AlwaysRight)) +
+        geom_density() +
+        xlab("Number of Clues Attempted") +
+        ggtitle("Number Attempted for Perfect Player vs Other Players")
+```
+
+Most players who get all questions correct tend not to attempt as many questions as other players.
+
+Density of percent correct answers by gender
+============================================
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    filter(!is.na(Gender)) %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) /
+            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    ggplot(aes(x=PercentCorrect)) + 
+        geom_density() + facet_grid(Gender ~ .) +
+        ggtitle("Density of Percent Correct by Gender")
+```
+
+We have the spike at 100 percent for both female and male players.
+The female players have a more spread out distribution of percent correct
+and their peak is slightly less than the peak for the male players.
+
+Daily Doubles
+=============
+There are 3 daily doubles in each game, one in the Jeopardy Round and
+two in the Double Jeopardy round.
+The player who gets the daily double questions 
+can wager as much of their current score on the question.
+
+The number of daily doubles found by players in a game:
+
+```{r}
+jeopardyData %>%
+    mutate(DDCount = DDWrong + DDRight) %>%
+    with(cbind(NumDD = 0:3, DDCount = table(DDCount),
+       Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2))) 
+```
+
+The percentage of all daily doubles answered correctly
+======================================================
+`r 
+jeopardyData %>%
+    filter(DDWrong + DDRight > 0) %>%
+    summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
+` percent.
+
+#### Number of Final Jeopardy Players
+
+If a player has a score of 0 or less at the end of the double jeopardy round,
+that player is eliminated from the final jeopardy round.
+The number of players in Final Jeopardy:
+
+```{r}
+NFinal <- jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    summarise(NumberInFinal = first(NumberInFinal)) %>%
+    with(table(NumberInFinal))
+cbind(NumberOfPlayers=1:3, Count = NFinal,
+    Percentage = round(NFinal / sum(NFinal) * 100, 2))
+```
+
+The shows with only one player left for Final Jeopardy:
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+    filter(NumberInFinal == 1) %>%
+    select(Date, Name, SecondRoundScore) %>%
+    as.data.frame()
+```
+
+#### Runaways
+
+A runaway game is when one player cannot be beat in Final Jeopardy.
+This will occur when one player has at least twice the score of each of the
+other players at the end of the Double Jeopardy round.
+
+```{r}
+isRunaway <- function(score) {
+    score <- sort(score)
+    all(score[3] >= 2*score[-3])
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+    with(c(NumberRunaways=sum(Runaway),
+        PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
+```
+
+#### Ties
+How often does the game end with multiple winners (i.e. a tie)?
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(NumWinners = sum(IsWinner)) %>%
+    summarise(NumWinners = first(NumWinners)) %>%
+    with(cbind(Winners = 1:3, Count = table(NumWinners),
+        Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
+```
+
+Most games have only one winner.
+In two games, all three people had the same final score.
+
+#### Comebacks
+
+How often does the player with the lowest score
+at the end of the double jeopardy round, win the game?
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
+    filter(IsWinner) %>%
+    with(c(Count = sum(IsComeback),
+        Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
+```
+
+#### Final Jeopardy Stumpers
+
+How often do all the players miss the Final Jeopardy questions?
+The data does not include any specific information about the Final Jeopardy question
+or wager.
+If the `FinalScore` is larger than the `SecondRoundScore`, we know the player answered
+Final Jeopardy correctly. Similarly, if `FinalScore` is less than `SecondRoundScore`,
+their response for Final Jeopardy was incorrect.
+If the `FinalScore` is the same as the `SecondRoundScore`, we only know that the
+player did not wager anything in Final Jeopardy, their response could have been correct or wrong.
+So we only count those who made a wager in Final Jeopardy.
+
+```{r}
+isStumper <- function(score2, score3) {
+    all(score3 < score2)
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter(all(SecondRoundScore != FinalScore)) %>%
+    summarise(IsStumper = isStumper(SecondRoundScore, FinalScore)) %>%
+    with(c(Count = sum(IsStumper), Games = length(IsStumper),
+        Percent = round(sum(IsStumper) / length(IsStumper) * 100, 2)))
+```
+
+#### Dollar Winnings in a Game
+
+
+When looking at the dollar winnings for a game we need to look separately
+at games before the dollar values doubled and after.
+
+```{r}
+jeopardyData %>%
+    filter(IsWinner) %>%
+    group_by(GameMaxValue) %>%
+    summarize(AveWinnings=mean(FinalScore),
+        MedianWinnings=median(FinalScore),
+        MinWinnings=min(FinalScore),
+        MaxWinnings=max(FinalScore)) %>%
+    as.data.frame()
+```
+
+The mean and median winnings are both about doubled
+when the dollar amounts doubled.
+
+The shows where the winning score was 0:
+
+```{r}
+jeopardyData %>%
+    filter(IsWinner, FinalScore == 0) %>%
+    select(Date, Name, FinalScore) %>%
+    as.data.frame()
+```
+
+In one game, all 3 players won with 0
+and in another game, two players tied with a score of 0.
+Actually, none of the players were considered winners
+since none of these players played in the next day's game.
+
+A visual view of the distribution of the winnings:
+
+```{r fig.width=8, fig.height=7}
+filter(jeopardyData, IsWinner) %>% 
+    ggplot(aes(x=FinalScore)) +
+    geom_histogram(binwidth = 2000) +
+    facet_grid(GameMaxValue ~ .) +
+    ggtitle("Distribution of Game Winnings")
+```
+
+There are
+`r filter(jeopardyData, GameMaxValue == "Max2000") %>% nrow()`
+with GameMaxValue of Max2000
+compared to only
+`r filter(jeopardyData, GameMaxValue == "Max1000") %>% nrow()`
+for Max1000.
+It is no surprising that the spread of the FinalScore values
+is larger for the Max2000 group.
+
+### The Players
+
+#### Number of Games Played
+
+The `NumTimesOnShow` variable increases each time the player is on the show.
+We want to look at the maximum value of `NumTimeOnShow` for each player:
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    with(summary(MaxNumGames))
+```
+
+Half the players only are on one show.
+Which is not surprising since two players (usually) do not return.
+One player was on 75 times.
+We will investigate that player later.
+
+Number of games played by gender:
+
+```{r}
+jeopardyData %>%
+    filter(!is.na(Gender)) %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    group_by(Gender) %>%
+    summarise(Min=min(MaxNumGames), Median=median(MaxNumGames),
+        Mean=mean(MaxNumGames), Max=max(MaxNumGames)) %>%
+	as.data.frame()
+```
+
+Looking at the players who won the most games (10 or more),
+the Date is the date of their final game:
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+        Date = max(Date)) %>%
+    filter(MaxNumGames >= 10) %>%
+    select(Name, MaxNumGames, Date) %>%
+    arrange(desc(MaxNumGames), desc(Date)) %>%
+	as.data.frame()
+```
+
+The distribution of the number of games by a player,
+leaving out the outliers (players who played more than 10 games)
+as well as players who never won (i.e. only played one game):
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
+    ggplot(aes(x=factor(MaxNumGames))) +
+        # geom_bar(binwidth=0.10, stat="count") + xlab("NumGamesPlayed") +
+        geom_bar() + xlab("NumGamesPlayed") +
+        coord_flip() +
+        ggtitle("Counts of Number of Games Played by a Player")
+```
+
+Most winners only win once and winning more than 5 games is rare.
+
+#### Total Winnings Per Player 
+
+Here we look at the total winnings for player over all the
+games she or he played.
+The number of wins is one less than the number of times on the show.
+
+Here are the winnings for the players who won 10 or more games:
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+        Date = max(Date), Dollars = sum(FinalScore)) %>%
+    filter(MaxNumGames >= 10) %>%
+    select(Name, MaxNumGames, Date, Dollars) %>%
+    arrange(desc(MaxNumGames), desc(Date)) %>%
+	as.data.frame()
+```
+
+The total winninges versus number of games played for players who won less than 10 games
+(we use jitter to better visualize the data in each group):
+
+```{r fig.width=8, fig.height=7}
+group_by(jeopardyData, PlayerId) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
+    filter(Wins > 0) %>%
+    filter(Wins < 10) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_jitter(position = position_jitter(width = .3)) +
+        ggtitle("Total Amount Won by a Player versus Number of Games Played")
+```
+
+Alternatively, we could use boxplots for the same data:
+
+```{r fig.width=8, fig.height=7}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(NumberWins = n() - 1) %>%
+    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
+    filter(Wins > 0) %>%
+    filter(Wins < 10) %>%
+    ggplot(aes(x=Wins, y=Dollars)) +
+        geom_boxplot(aes(group = Wins)) +
+        ggtitle("Boxplots of Amount Won by a Player versus Number of Games Played")
+```
+
+#### Gender
+
+The gender of the
+`r length(unique(jeopardyData$PlayerId))`
+players:
+
+```{r}
+jeopardyData %>%
+    filter(!is.na(Gender)) %>%
+    group_by(PlayerId) %>%
+    summarise(Gender1 = first(Gender)) %>%
+    with(cbind(Count=table(Gender1),
+        Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
+```
+
+This is the gender of all the players
+(that we were able to compute the gender for)
+and is close to 50:50.
+At least one third of all of these players will play in more than one game
+(see earlier analysis of number of names played by gender).
+
+Here we look at the gender distribution for each game.
+There are 4 possible combinations for the 3 contestants:
+FFF, FFM, FMM, and MMM.
+Since the winner plays in the next game,
+the same player can contribute to many gender tryads.
+
+To compute:
+
+```{r}
+trigen <- function(gen) {
+    if(any(is.na(gen))) {
+      NA_character_
+    } else {
+        paste0(sort(gen), collapse = "")
+    }
+}
+jeopardyData %>%
+    group_by(Show) %>%
+    summarise(ShowGender = trigen(Gender)) %>%
+    with(cbind(Count=table(ShowGender),
+        Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
+	knitr::kable(padding=0)
+```
+A lot more games are played with two or more male contestants.
+
+### Ken Jennings
+
+The player with longest winning streak, 74 games
+(the 75th game was a loss):
+
+```{r}
+jeopardyData %>%
+    group_by(PlayerId) %>%
+    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+    filter(MaxNumGames == 75) %>%
+    summarise(NumberWins = n() - 1) %>%
+	as.data.frame()
+```
+
+Ken Jennings won
+`r filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
+        NumTimesOnShow < 75) %>%
+    summarise(TotalWinnings = sum(FinalScore)) %>%
+	pull() %>%
+    format(scientific = FALSE, big.mark = ",")`
+dollars in his 75 games.
+
+The final scores in the game he lost:
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+        %in% PlayerId, any(NumTimesOnShow == 75)) %>%
+        ungroup() %>%
+        select(Name, FinalScore) %>%
+        arrange(desc(FinalScore)) %>%
+		as.data.frame()
+```
+
+His winnings by game:
+
+```{r fig.width=8, fig.height=7}
+filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
+    NumTimesOnShow < 75) %>%
+    ggplot(aes(x=Date, y=FinalScore)) + geom_point() +
+    xlab("Date in 2004") +
+    ggtitle("Ken Jennings Winnings by Date of Game")
+```
+
+Jennings percent correct in each game:
+
+```{r fig.width=8, fig.height=7}
+filter(jeopardyData,
+    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
+    mutate(PercentCorrect =
+        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+    with(summary(PercentCorrect))
+```
+    
+How often did Jennings win in a runaway?
+
+```{r}
+jeopardyData %>%
+    group_by(Show) %>%
+    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+        %in% PlayerId, all(NumTimesOnShow < 75)) %>%
+    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+    with(c(NumberRunaways=sum(Runaway),
+        PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
+```
+
+## Players by State
+
+Where do Jeopardy players come from?
+While there are players from countries other than the United States,
+the vast majority are from the U.S.
+
+The number of players from each state;
+
+```{r fig.width=8, fig.height=8}
+NPlayers <- table(jeopardyData$State)
+stateDF <- data.frame(State = names(NPlayers),
+    NPlayers = c(NPlayers)) %>%
+    filter(State %in% c(state.name, "D.C."))
+ggplot(stateDF, aes(x=NPlayers,
+        y=ordered(State, levels=State[order(NPlayers)]))) +
+        geom_point() + xlab("Number of Players") + ylab("State") +
+        ggtitle("Number of Players by State")
+```
+
+The state with more people tend to have more players on Jeopardy.
+To make more appropriate comparisons, we need state population data.
+
+State population data was downloaded from the U.S. Census
+http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv.
+The CSV file includes aggregation data at the top and population values
+for multiple years.
+We only extracted the data for the 50 states and the District of Columbia
+and only used the 2010 values.
+
+```{r}
+# URL <- "http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv"
+# censusTmpFile <- tempfile()
+# download.file(URL, destfile=censusTmpFile)
+# popPipe <- pipe(paste0("sed -n -e '/Alabama/,/Wyoming/p' ", censusTmpFile, " | cut -d'\"' --output-delimiter=\";\" -f1-2 | sed -e 's/\"//' -e 's/^.//' -e 's/,//g'"))
+# statePop <- read.table(popPipe, sep=";", col.names=c("State", "Population"),
+#     stringsAsFactors=FALSE)
+statePop <- read.csv("pop_by_state_2017.csv", stringsAsFactors=FALSE)
+statePop[statePop$State == "District of Columbia", "State"] <- "D.C."
+indx51 <- match(stateDF$State, statePop$State)
+stateDF$Population <- statePop[indx51, "Population"]
+```
+
+The number of players versus the state population:
+
+```{r fig.width=8, fig.height=7}
+ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
+    geom_point() + xlab("State Population") +
+    geom_text(data=subset(stateDF,
+        State %in% c("New York", "D.C.", "Texas", "Florida")),
+        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.2)) +
+    geom_text(data=subset(stateDF,
+        State %in% c("California")),
+        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8)) +
+    ggtitle("Number of Players versus State Population")
+```
+
+As we noted earlier,
+the bigger the state's population, the more players from that state.
+Texas and Florida have the second and fourth largest population but
+a low number of players and D.C. with a small population,
+has a disproportionate number of players.
+
+To see if players are equally likely to come from any U.S. state,
+we want to compare the number of players from each state
+to the state's population.
+We add a standardized number of players per million people in a state to the
+`stateDF` dataset:
+
+```{r}
+stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
+```
+
+The number of players standardized by state's population (on log2 scale):
+
+```{r fig.width=8, fig.height=8}
+ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
+    y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
+    geom_point() +
+    xlab("Number of Players / 1 Million Population") + ylab("State") +
+    ggtitle("Number of Players Standardized by State Population")
+```
+
+The East coast and West Coast is very well represented
+after adjusting for population.
+The Midwest is mostly in the middle and the South and plains states are
+under represented.
+
+## R Session Info
+
+```{r}
+sessionInfo()
+```
+
+## Appendix
+
+The web scraper function:
+```{r eval=FALSE}
+jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
+
+  require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+  if(is.null(data)) {
+  require("XML", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+  require("plyr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+  # require("reshape2", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+  # Final table with (eventually) all shows
+  d.jpdy <- data.frame()
+
+  # Temporary table which will hold single show's data
+  d.temp <- as.data.frame(matrix(NA,nrow=3,ncol=7))
+  colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
+
+  if(is.null(id)) {
+    m <- 1:5950
+    id <- jgetid(m, sleep=sleep)
+  }
+
+  # THE GAME 
+  # Loop that gets one show's data per iteration and aggregates it
+
+  for ( k in id ) {
+
+    url <- paste0("http://www.j-archive.com/showgame.php?game_id=",k)
+
+    if(sleep > 0) Sys.sleep(sleep)
+    doc <- try(htmlParse(url, error = function(...){}))
+
+    r <- xmlRoot(doc)
+    tables <- getNodeSet(doc, "//table")
+
+    cat(k, "\n", file="k.txt", append=TRUE)
+    
+    # Create a vector of table lengths to help find the info we want
+    vec <- rep(NA,length(llply(tables,names)))
+    for (j in 1:length(llply(tables,names))){
+      vec[j] <- length(names(tables[[j]]))
+    }
+
+    # Find the tables our info is in
+    firstrd <- max(which(vec==6))-1
+    secrd <- min(which(vec==3))
+    finalrd <- length(vec)-1
+    qcorr <- length(vec)
+
+    # Scrape one show's data
+    for (i in 0:2){
+      d.temp[i+1,1] <- xmlValue(r[[1]][[1]])
+      d.temp[i+1,2] <- xmlValue(tables[[1]][[1]][[3]][[2+2*i]])
+      d.temp[i+1,3] <- xmlValue(tables[[firstrd]][[2]][[5-2*i]])
+      d.temp[i+1,4] <- xmlValue(tables[[secrd]][[2]][[5-2*i]])
+      d.temp[i+1,5] <- xmlValue(tables[[finalrd]][[2]][[5-2*i]])
+      d.temp[i+1,6] <- xmlValue(tables[[qcorr]][[3]][[5-2*i]])
+      d.temp[i+1,7] <- k
+    }
+    
+    # Bind the show data to the final data frame
+    d.jpdy <- rbind(d.jpdy, d.temp)
+
+  }
+  } else {
+      d.jpdy <- data
+  }
+  if(getDataOnly) {
+      return(d.jpdy)
+  }
+
+  # Extract and Format the Variables
+  for (i in 1:dim(d.jpdy)[1]){
+
+cat(i, d.jpdy[i,1], "WebId= ", d.jpdy[i,7], "\n", file="dinfo.txt", append=TRUE)
+
+    personInfo <- d.jpdy[i,2]
+    personInfoCommaIndex <- gregexpr(',', personInfo)
+    # cat(i, personInfo, "\n", file="pi.txt", append=TRUE)
+    occupationStart <- regexpr(' a ', personInfo)[1]
+    nameEnd <- occupationStart - 2
+    if(occupationStart == -1) {
+        occupationStart <- regexpr(' an ', personInfo)[1] + 1
+        if(occupationStart < 1) {
+            nameEnd <- personInfoCommaIndex[[1]][1] - 1
+        } else {
+            nameEnd <- occupationStart - 3
+        }
+    }
+    cityStart <- regexpr(' originally from ', personInfo)[1]
+    fromLen <- 17
+    if(cityStart == -1) {
+        cityStart <- regexpr(' from ', personInfo)[1]
+        fromLen <- 6
+    }
+    whoseStart <- regexpr('whose ', personInfo)[1]
+    if(whoseStart == -1) {
+        firstTime <- TRUE
+        cityStateEnd <- nchar(personInfo)
+    } else {
+        cityStateEnd <- whoseStart - 3
+    }
+    d.jpdy$Name[i] <- substr(personInfo, 1, nameEnd)
+    if(occupationStart < 1) {
+        d.jpdy$Occupation[i] <- NA
+    } else {
+        d.jpdy$Occupation[i] <- substr(personInfo, occupationStart+3,
+            cityStart-1)
+    }
+    cityState <- substr(personInfo, cityStart + fromLen, cityStateEnd)
+    cityStateCommaIndex <- gregexpr(',', cityState)[[1]][1]
+    if(cityStateCommaIndex == -1) {
+        d.jpdy$City[i] <- NA
+        d.jpdy$State[i] <- str_trim(cityState)
+    } else {
+        d.jpdy$City[i] <- str_trim(
+            substr(cityState, 1, cityStateCommaIndex[[1]][1]-1))
+        d.jpdy$State[i] <- str_trim(
+            substr(cityState, cityStateCommaIndex[[1]][1]+1,
+            nchar(cityState)))
+    }
+    if(nchar(d.jpdy$State[i]) == 0) {
+        d.jpdy$State[i] <- NA
+    }
+    
+    # Extract number of days on show
+    e <- regexpr('whose', d.jpdy[i,2])[1]
+    f <- regexpr('-day',d.jpdy[i,2])[1]
+    if (e == -1) d.jpdy$num_times_on_show[i] <- 1 else{
+      d.jpdy$num_times_on_show[i] <- as.numeric(substr(d.jpdy[i,2],e+6,f-1))+1
+      }
+
+    #######################
+    ##Make numbers numeric
+    ########################
+    win1 <- gsub(',','', d.jpdy[i,3])
+    d.jpdy$first_round_winnings[i] <- as.numeric(gsub('[$]','',win1))
+    win2 <- gsub(',','', d.jpdy[i,4])
+    d.jpdy$Winnings_2nd_Round[i] <- as.numeric(gsub('[$]','',win2))
+    win3 <- gsub(',','', d.jpdy[i,5])
+    d.jpdy$Final_Winnings[i] <- as.numeric(gsub('[$]','',win3))
+    
+    #################
+    #Find Show
+    #################
+    place1 <- regexpr('#', d.jpdy[i,1])[1]
+    place2 <- regexpr(',',d.jpdy[i,1])[1]
+    show.temp <- substr(d.jpdy[i,1], place1, place2)
+    show.temp <- gsub('#','',show.temp)
+    d.jpdy$Show[i] <- as.numeric(gsub(',','',show.temp))
+
+    #-----------------------------
+    #Get Number Right
+    d.jpdy$n.Right[i]<-as.numeric(strsplit(d.jpdy[i,6],' ')[[1]][1])
+	
+    #-----------------------------
+    #Get Number Wrong
+    w<-regexpr("W",d.jpdy[i,6])[1]-2
+    c<-regexpr(",",d.jpdy[i,6])[1]+1
+    d.jpdy$n.Wrong[i]<-as.numeric(substr(d.jpdy[i,6],c,w))
+
+    #-----------------------------
+    #Get Number DD Wrong
+    str<-strsplit(d.jpdy[i,6],"W")[[1]][2]
+    ddw<-regexpr("DD",str)[1]
+    if (is.na(strsplit(d.jpdy[i,6],"W")[[1]][2])) {d.jpdy$DD.Wrong[i]<-0} 
+    else {d.jpdy$DD.Wrong[i]<-as.numeric(substr(str,ddw-2,ddw-2))}
+
+    #---------------------------
+    #Get Number DD Right
+    loc.c<-regexpr(",",d.jpdy[i,6])[1]
+    loc.R<-regexpr("R",d.jpdy[i,6])[1]
+    dds<-substr(d.jpdy[i,6],loc.R,loc.c)
+    ddr<-regexpr("DD",dds)[1] 
+    if (loc.c-loc.R < 2) {d.jpdy$DD.Right[i]<-0} 
+    else {d.jpdy$DD.Right[i]<-as.numeric(substr(dds,ddr-2,ddr-2))}
+
+  }
+
+  d.jpdy <- d.jpdy[,-(2:6)]
+
+  return(d.jpdy)
+
+}
+```
+The data cleaning function:
+```{r eval=FALSE}
+"jcleanData"<-
+function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
+    require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
+    # Nellis Air Force Base:
+    indx <- which(df$City == "Nellis Air Force Base" &
+        df$State == "Las Vegas")
+    if(length(indx)) {
+        df[indx, "City"] <- "Las Vegas"
+        df[indx, "State"] <- "Nevada"
+    }
+    # State misspelled:
+    indx <- which(df$State == "Vriginia")
+    if(length(indx)) {
+        df[indx, "State"] <- "Virginia"
+    }
+    indx <- which(df$State == "Nevade")
+    if(length(indx)) {
+        df[indx, "State"] <- "Nevada"
+    }
+    indx <- which(df$State == "Onio")
+    if(length(indx)) {
+        df[indx, "State"] <- "Ohio"
+    }
+    indx <- which(df$State == "Caifornia")
+    if(length(indx)) {
+        df[indx, "State"] <- "California"
+    }
+    indx <- which(df$State == "IL")
+    if(length(indx)) {
+        df[indx, "State"] <- "Illinois"
+    }
+    indx <- which(df$State == "Kenrucky")
+    if(length(indx)) {
+        df[indx, "State"] <- "Kentucky"
+    }
+    indx <- which(df$State == "New Nork")
+    if(length(indx)) {
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$State == "British Colombia")
+    if(length(indx)) {
+        df[indx, "State"] <- "British Columbia"
+    }
+    indx <- which(df$State == "British Colombia")
+    if(length(indx)) {
+        df[indx, "State"] <- "British Columbia"
+    }
+    indx <- which(df$State == "Ontario Canada")
+    if(length(indx)) {
+        df[indx, "State"] <- "Ontario, Canada"
+    }
+    # State is just Canada, add Province:
+    indx <- which(df$City == "Toronto" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Sault Ste. Marie" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Ottawa" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Guelph" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Ontario, Canada"
+    }
+    indx <- which(df$City == "Winnipeg" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Manitoba, Canada"
+    }
+    indx <- which(df$City == "Montreal" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "Quebec, Canada"
+    }
+    indx <- which(df$City == "Vancouver" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "British Columbia, Canada"
+    }
+    indx <- which(df$City == "West Vancouver" & df$State == "Canada")
+    if(length(indx)) {
+                df[indx, "State"] <- "British Columbia, Canada"
+    }
+    # Add Canada to Provinces:
+    for(p in c("Alberta", "British Columbia", "Manitoba",
+        "Northwest Territories", "Nova Scotia", "Ontario",
+        "Prince Edward Island",
+        "Quebec", "Saskatchewan", "Yukon Territory")) {
+        indx <- which(df$State == p)
+        if(length(indx)) {
+            df[indx, "State"] <- paste0(p, ", Canada")
+        }
+    }
+    indx <- which(df$State == "Trinidad and Tobago and now in New York")
+    if(length(indx)) {
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$State == "Easton Maryland")
+    if(length(indx)) {
+        df[indx, "State"] <- "Maryland"
+        df[indx, "City"] <- "Easton"
+    }
+    # State guess
+    indx <- which(df$State == "Hawaii[?]")
+    if(length(indx)) {
+        df[indx, "State"] <- "Hawaii"
+    }
+    # Yellowstone National Park
+    indx <- which(df$State == "Wyoming and Montana")
+    if(length(indx)) {
+        df[indx, "State"] <- "Wyoming"
+    }
+    # New York Boroughs
+    indx <- which(df$State == "The Bronx")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Bronx" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Brooklyn" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Manhattan" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Queens" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    indx <- which(df$City == "Staten Island" & df$State == "New York")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    # New York City
+    indx <- which(df$State == "New York City" | df$City == "New York City")
+    if(length(indx)) {
+        df[indx, "City"] <- "New York"
+        df[indx, "State"] <- "New York"
+    }
+    # West Hartford, no state:
+    indx <- which(df$State == "West Hartford")
+    if(length(indx)) {
+        df[indx, "City"] <- "West Hartford"
+        df[indx, "State"] <- "Connecticut"
+    }
+    # now stationed at ... state
+    indx <- grep("now stationed ", df$State)
+    if(length(indx)) {
+        for(i in indx) {
+            stateFirstCommaIndex <- regexpr(',', df$State[i])[1]
+            df$State[i] <- substr(df$State[i], 1, stateFirstCommaIndex - 1)
+        }
+    }
+    # now living in ...
+    indx <- grep("now living", df$State)
+    if(length(indx)) {
+        for(i in indx) {
+            nowIndex <- regexpr('now living in ', df$State[i])
+            newCityState <- substr(df$State[i], nowIndex[1] +
+                attr(nowIndex, "match.length"), nchar(df$State[i]))
+            cityStateCommaIndex <- gregexpr(',', newCityState)
+            if(cityStateCommaIndex[[1]][1] == -1) {
+                df$City[i] <- NA
+                df$State[i] <- newCityState
+            } else {
+                df$City[i] <- str_trim(substr(newCityState, 1,
+                    cityStateCommaIndex[[1]][1]-1))
+                df$State[i] <- str_trim(substr(newCityState,
+                    cityStateCommaIndex[[1]][1]+1, nchar(df$State[i])))
+            }
+        }
+    }
+    indx <- grep('nurse and "Mr. Mom"', df$Occupation)
+    if(length(indx)) {
+        df$Occupation[indx] <- "Nurse"
+    }
+    indx <- grep('"Mr. Mom"', df$Occupation)
+    if(length(indx)) {
+                df$Occupation[indx] <- "Dad"
+    }
+    # Drop Back to School Week games with children
+    # Occupation was their age.
+    youthOccupation <- c("10-year-old", "11-year-old", "12-year-old",
+        "eleven-year-old", "ten-year-old", "twelve-year-old")
+    indx <- which(df$Occupation %in% youthOccupation)
+    if(length(indx)) {
+        df <- df[-indx, ]
+    }
+    indx <- grep('Leslie "Lefty" Scott', df$Name)
+    if(length(indx)) {
+                df$Name[indx] <- "Leslie Scott"
+    }
+    if(dropPilot) {
+        indx <- grep("pilot", df$Title)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop504) {
+        indx <- which(df$WebId == 504)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop4983) {
+        indx <- which(df$WebId == 4983)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    # Names and Occupation mixed:
+    NameMixed <- c(
+        "John Kilby, an owner o",
+        "Chris Falcinelli, an owner o",
+        "Cathy Melocik, an editor fo", 
+        "Brad Rodriguez, an assistant general manager o",
+        "Beverly Jones, an attorney fo", 
+        "Lori Hohenleitner, an executive director fo",
+        "Saidi Chen, an attorney fo", 
+        "Barbara Sheridan, an attorney and law clerk t",
+        "Mark Leinwand, an attorney an", 
+        "Patricia Kelvin, an editor o"
+    )
+    for(nm in NameMixed) {
+        indx <- grep(nm, df$Name)
+        if(length(indx)) {
+            znm <- strsplit(df$Name[indx[1]], ",")
+            df$Name[indx] <- znm[[1]][1]
+            df$Occupation[indx] <- str_trim(paste(znm[[1]][2],
+                df$Occupation[indx]))
+        }
+    }    
+    # Fix names:
+    indx <- which(names(df) == "num_times_on_show")
+    if(length(indx)) {
+        names(df)[indx] <- "NumTimesOnShow"
+    }
+    indx <- which(names(df) == "first_round_winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FirstRoundScore"
+    }
+    indx <- which(names(df) == "Winnings_2nd_Round")
+    if(length(indx)) {
+        names(df)[indx] <- "SecondRoundScore"
+    }
+    indx <- which(names(df) == "Final_Winnings")
+    if(length(indx)) {
+        names(df)[indx] <- "FinalScore"
+    }
+    indx <- which(names(df) == "n.Right")
+    if(length(indx)) {
+        names(df)[indx] <- "NumRight"
+    }
+    indx <- which(names(df) == "n.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "NumWrong"
+    }
+    indx <- which(names(df) == "DD.Wrong")
+    if(length(indx)) {
+            names(df)[indx] <- "DDWrong"
+    }
+    indx <- which(names(df) == "DD.Right")
+    if(length(indx)) {
+            names(df)[indx] <- "DDRight"
+    }
+    df
+}
+```
