@@ -6,6 +6,8 @@ autosize: true
 ---
 
 ```{r echo=FALSE}
+fht <- 12
+fwh <- 12
 jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 source("jcleanData.R")
 # jeopardyData <- readRDS("jeopardyData.rds")
@@ -142,7 +144,7 @@ A variable, `IsWinner`, was added to identify the winner(s) in each game (tied f
 
 ```{r}
 isWinner <-
-function (x)                                                                    
+function (x)
 {
     r <- rank(x)
     if (all(r == 2)) {
@@ -247,10 +249,10 @@ a game by trying 51.
 A graphical view of the number of attempted clues:
 ==================================================
 
-```{r plot01}
+```{r plot01, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    ggplot(aes(x=factor(NumAttempted))) + 
+    ggplot(aes(x=factor(NumAttempted))) +
         geom_bar() + xlab("Number Clues Attempted by a Player") +
         ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
@@ -258,11 +260,11 @@ jeopardyData %>%
 The same graph, by gender
 ==========================
 
-```{r plot02}
+```{r plot02, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     filter(!is.na(Gender)) %>%
-    ggplot(aes(x=factor(NumAttempted))) + 
+    ggplot(aes(x=factor(NumAttempted))) +
         geom_bar() + xlab("Number Clues Attempted by a Player") +
         facet_grid(Gender ~ .) +
         ggtitle("Distribution of Clues Attempted by Gender")
@@ -280,7 +282,6 @@ another play can try to answer that same question.
 
 The percentage of clues answers correctly
 =========================================
-
 ```{r}
 jeopardyData %>%
     mutate(PercentCorrect =
@@ -290,13 +291,12 @@ jeopardyData %>%
 
 A density plot of the percent correct answers:
 =============================================
-
-```{r plot03}
+```{r plot03, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    ggplot(aes(x=PercentCorrect)) + 
+    ggplot(aes(x=PercentCorrect)) +
         geom_density()
 ```
 
@@ -305,12 +305,14 @@ then it drops off but rises again at 100 percent.
 
 Always Right
 ============
-Here is the distribution of attempted clues for those who always 
+Here is the distribution of attempted clues for those who always
 answer correctly compared to other players. We use a density plot
 instead of counts since the total numbers in each group are vastly
 different.
 
-```{r plot04}
+==========
+
+```{r plot04, fig.width=12, fig.height=12, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
         PercentCorrect = (NumRight + DDRight) /
@@ -326,14 +328,13 @@ Most players who get all questions correct tend not to attempt as many questions
 
 Density of percent correct answers by gender
 ============================================
-
-```{r plot05}
+```{r plot05, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     filter(!is.na(Gender)) %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    ggplot(aes(x=PercentCorrect)) + 
+    ggplot(aes(x=PercentCorrect)) +
         geom_density() + facet_grid(Gender ~ .) +
         ggtitle("Density of Percent Correct by Gender")
 ```
@@ -346,7 +347,7 @@ Daily Doubles
 =============
 There are 3 daily doubles in each game, one in the Jeopardy Round and
 two in the Double Jeopardy round.
-The player who gets the daily double questions 
+The player who gets the daily double questions
 can wager as much of their current score on the question.
 
 The number of daily doubles found by players in a game:
@@ -355,12 +356,12 @@ The number of daily doubles found by players in a game:
 jeopardyData %>%
     mutate(DDCount = DDWrong + DDRight) %>%
     with(cbind(NumDD = 0:3, DDCount = table(DDCount),
-       Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2))) 
+       Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2)))
 ```
 
 The percentage of all daily doubles answered correctly
 ======================================================
-`r 
+`r
 jeopardyData %>%
     filter(DDWrong + DDRight > 0) %>%
     summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
@@ -504,9 +505,8 @@ since none of these players played in the next day's game.
 
 Distribution of Winnings
 ========================
-
-```{r plot06}
-filter(jeopardyData, IsWinner) %>% 
+```{r plot06, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+filter(jeopardyData, IsWinner) %>%
     ggplot(aes(x=FinalScore)) +
     geom_histogram(binwidth = 2000) +
     facet_grid(GameMaxValue ~ .) +
@@ -570,12 +570,13 @@ jeopardyData %>%
     arrange(desc(MaxNumGames), desc(Date)) %>%
 	as.data.frame()
 ```
+==========
 
 The distribution of the number of games by a player,
 leaving out the outliers (players who played more than 10 games)
 as well as players who never won (i.e. only played one game):
 
-```{r plot07}
+```{r plot07, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     group_by(PlayerId) %>%
     summarise(MaxNumGames = max(NumTimesOnShow)) %>%
@@ -589,7 +590,7 @@ jeopardyData %>%
 
 Most winners only win once and winning more than 5 games is rare.
 
-Total Winnings Per Player 
+Total Winnings Per Player
 =========================
 Here we look at the total winnings for player over all the
 games she or he played.
@@ -611,7 +612,7 @@ jeopardyData %>%
 The total winninges versus number of games played for players who won less than 10 games
 (we use jitter to better visualize the data in each group):
 
-```{r plot08}
+```{r plot08, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 group_by(jeopardyData, PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
     summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
@@ -625,7 +626,7 @@ group_by(jeopardyData, PlayerId) %>%
 Another Look at Winnings
 ========================
 
-```{r plot09}
+```{r plot09, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     group_by(PlayerId) %>%
     mutate(NumberWins = n() - 1) %>%
@@ -726,7 +727,7 @@ Ken Jennings Winnings by Game
 =============================
 His winnings by game:
 
-```{r plot10}
+```{r plot10, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 filter(jeopardyData,
     PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
     NumTimesOnShow < 75) %>%
@@ -739,14 +740,14 @@ Ken Jennings Percent Correct
 ============================
 Jennings percent correct in each game:
 
-```{r plot11}
+```{r plot11, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 filter(jeopardyData,
     PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
     with(summary(PercentCorrect))
 ```
-    
+
 Ken Jennings Runaways
 =====================
 
@@ -809,8 +810,8 @@ Players vs State Population
 ===========================
 The number of players versus the state population:
 
-```{r plot12}
-ggplot(data=stateDF, aes(x=Population, y=NPlayers)) + 
+```{r plot12, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+ggplot(data=stateDF, aes(x=Population, y=NPlayers)) +
     geom_point() + xlab("State Population") +
     geom_text(data=subset(stateDF,
         State %in% c("New York", "D.C.", "Texas", "Florida")),
@@ -841,7 +842,7 @@ stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 
 The number of players standardized by state's population (on log2 scale):
 
-```{r plot13}
+```{r plot13, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
     geom_point() +
