@@ -660,6 +660,7 @@ jeopardyData %>%
         Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
 	knitr::kable(padding=0)
 ```
+
 A lot more games are played with two or more male contestants.
 
 ### Ken Jennings
