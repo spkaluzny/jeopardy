@@ -14,7 +14,7 @@ jgetid <- function(id, sleep=1){
   #Also determines shows that have no data
 
   for (m in id) {
-    url <- paste0("http://www.j-archive.com/showgame.php?game_id=",m)
+    url <- paste0("http://www.j-archive.com/showgame.php?game_id=", m)
     if(sleep > 0) Sys.sleep(sleep)
     doc <- try(htmlParse(url, error = function(...){}))
     r <- xmlRoot(doc)
@@ -22,6 +22,7 @@ jgetid <- function(id, sleep=1){
     if (  is.na(xmlValue(r[[2]][[4]][[4]])) |
 	  (regexpr("Championship",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
 	  (regexpr("Kids",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
+	  (regexpr("Back to School",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
 	  (regexpr("Teen",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
  	  (regexpr("Tournament",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
  	  (regexpr("College",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
