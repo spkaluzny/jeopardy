@@ -334,8 +334,8 @@ jeopardyData %>%
     mutate(PercentCorrect =
         (NumRight + DDRight) /
             (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    ggplot(aes(x=PercentCorrect)) +
-        geom_density() + facet_grid(Gender ~ .) +
+    ggplot(aes(x=PercentCorrect, color=Gender)) +
+        geom_density() +
         ggtitle("Density of Percent Correct by Gender")
 ```
 
