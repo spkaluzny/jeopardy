@@ -1,5 +1,5 @@
 "jcleanData"<-
-function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
+function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE) {
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
     indx <- which(df$City == "Nellis Air Force Base" &
@@ -219,6 +219,12 @@ function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
             df <- df[-indx, ]
         }
     }
+    if(drop5348) {
+        indx <- which(df$WebId == 5348)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
     # Names and Occupation mixed:
     NameMixed <- c(
         "John Kilby, an owner o",
@@ -230,7 +236,10 @@ function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
         "Saidi Chen, an attorney fo", 
         "Barbara Sheridan, an attorney and law clerk t",
         "Mark Leinwand, an attorney an", 
-        "Patricia Kelvin, an editor o"
+        "Patricia Kelvin, an editor o",
+		"Bob Verini, an academic director fo",
+		"Sally Hatfield, an English a",
+		"Buzz Newberry, an owner o"
     )
     for(nm in NameMixed) {
         indx <- grep(nm, df$Name)
