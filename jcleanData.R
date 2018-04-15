@@ -1,5 +1,6 @@
 "jcleanData"<-
-function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE) {
+function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE,
+		 dropBackToSchool=TRUE) {
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
     indx <- which(df$City == "Nellis Air Force Base" &
@@ -197,9 +198,17 @@ function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE) {
     if(length(indx)) {
         df <- df[-indx, ]
     }
+	# Above does not get all Back to School Week games (Sept, 2003)
+	# Remove others based on WebId instead
+	# Note that jgetid will now drop "Back to School" games 2018-04-15
+	webIdBackToSchool <- c(5014, 5015, 5016, 5017, 3342)
+	indx <- which(df$WebId %in% webIdBackToSchool)
+    if(length(indx)) {
+	    df <- df[-indx, ]
+    }
     indx <- grep('Leslie "Lefty" Scott', df$Name)
     if(length(indx)) {
-                df$Name[indx] <- "Leslie Scott"
+        df$Name[indx] <- "Leslie Scott"
     }
     if(dropPilot) {
         indx <- grep("pilot", df$Title)
