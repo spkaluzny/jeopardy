@@ -5,6 +5,14 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
 
+```{R setup, include = FALSE, cache = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  error = TRUE
+)
+```
+
 ```{r echo=FALSE}
 jeopardyDataRaw <- readRDS("jeopardyDataRaw.rds")
 source("jcleanData.R")
