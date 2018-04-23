@@ -24,35 +24,30 @@ source("jcleanData.R")
 
 Jeopardy - The Game
 ===================
-Jeopardy is a television quiz show where three contestants compete by
-responding to general knowledge clues.
-Their responses must be in the form of a question.
-The daily syndicated version of the show has been on the air since 1984.
+* Television quiz show where three contestants compete to answer quesions
+* Their responses must be in the form of a question
+* The daily syndicated version of the show has been on the air since 1984.
 
 Game Description
 ================
-The show has two rounds and a final.
-Each round has 6 categories and within each category there are 5 clues.
-The clues have increasing dollar amounts with a category.
-If a player gives the correct answer to a clues, that dollar amount
-is added to their score.
-Incorrect answers result in subtraction of that dollar amount.
+* The show has two rounds and a final.
+* Each round has 6 categories each with 5 clues
+* Clues have increasing dollar amounts within a category.
 
-The final jeopardy clue ends the game.
-The players are told the category and they can wager as much of their score.
-The players have 30 seconds to write down their response once the final clue
-is shown.
-Players with a correct response get their wager added to their score,
-incorrect responses result in subtraction of the wager amount.
-The player with the highest score wins that amount in dollars and
-plays in the next day's game against two new players.
+Final Jeopardy
+==============
+* Players are told the category
+* They can wager as much of their score
+* 30 seconds to write down answer
+* Player with the highest score wins that amount in dollars
+  * plays in the next day's game against two new players.
 
-T
-Data from the Jeopardy games are are available on the Internet.
-It includes information about the players:
-names, home city, number of games played, winnings, etc.
-This analysis does not look at the content of the game questions (answers)
-which are also available on the site.
+Jeopary Data
+============
+* Data scraped from Internet site
+* Information about players
+  + name, home city, occupation
+  + number of games played, winnings
 
 Purpose of This Analysis
 ========================
