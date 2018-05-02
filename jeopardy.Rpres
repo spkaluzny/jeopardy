@@ -47,6 +47,8 @@ Jeopary Data
 * Data scraped from Internet site
 * Information about players
   + name, home city, occupation
+  + number of correct and wrong answers
+  + daily double play
   + number of games played, winnings
 
 Purpose of This Analysis
@@ -69,46 +71,46 @@ We make extensive use of the new pipe operator (`%>%`)
 that was introduced wtih the `dplyr` package.
 
 Those key packages are loaded here.
-```{r}
+```{r, echo=FALSE}
 library(ggplot2, quietly= TRUE, warn.conflicts = FALSE)
 library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
 ```
 
 The Data
 ========
-- The data was scraped from the
+* The data was scraped from the
 [http://www.j-archive.com site](http://www.j-archive.com) site
 using an R function that was modified from
-[https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun](https://scraperwiki.com/scrapers/jarchive_scraper_taiwanshaun).
-- Only regular Jeopardy games were downloaded,
+* Only regular Jeopardy games were downloaded,
 leaving out championships, teen, college, etc tournaments.
 
-```{r eval = FALSE}
-jeopardyDataRaw <- jscrapeDirect(id=1:5950)
+```{r eval=FALSE}
+jeopardyDataRaw <- jscrapeDirect()
 ```
 
-Cleaning the Data
-=================
+Scraped Data
+============
 The scraped data has 15 columns:
 ```{r}
 names(jeopardyDataRaw)
 ```
-From these columns additional variables were computed.
-Variables were renamed to a consistent and descriptive naming scheme.
 
-The resulting data needed to be cleaned up.
-Changes made include values in the wrong column,
-spelling error in names of cities and states,
-New York city boroughs changed to New York,
-"now living in ..." and "now stationed at ..."
-changed to the listed location.
-The cleaning was an iterative process,
-looking at summaries of the data, finding more errors,
-making corrections.
-The clean up operations were all encapsulate in a single
-function, `jcleanData` that could be repeatedly run on the
-`jeopardyRawData` object.
-The `jcleanData` function is listed in the appendix.
+Cleaning the Data
+=================
+* Variables were renamed to a consistent and descriptive naming scheme.
+  + values in the wrong column
+  + spelling error in names of cities and states,
+  + now living in ..." and "now stationed at ..." to listed location
+* The cleaning was an iterative process
+  + looking at summaries of the data
+  + finding more errors,
+  + making corrections
+
+Clean Function
+==============
+* The clean up operations were all encapsulate in a single function
+  + `jcleanData`
+* Run on the scraped data
 
 ```{r}
 jeopardyData <- jcleanData(jeopardyDataRaw)
@@ -116,16 +118,14 @@ jeopardyData <- jcleanData(jeopardyDataRaw)
 
 Additional Variables
 ====================
-To identify individual players, a `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
+* Additional variables were computed from the data
+  + `PlayerId` was created by pasting together the `Name`, `Occupation`, `City`, and `State`:
+  + Analysis of `PlayerId` indicated that it uniquely identified players
 ```{r}
 jeopardyData$PlayerId <- with(jeopardyData,
     paste(Name, Occupation, City, State, sep='.'))
 ```
-Analysis of `PlayerId` indicated that it uniquely identified players
-e.g. show numbers and dates were grouped together.
-
-A `Date` variable was extracted from information in the `Title` variable:
-
+  + `Date` variable was extracted from information in the `Title` variable
 ```{r}
 airedIndex <- regexpr(" aired ", jeopardyData$Title)
 jeopardyData$Date <- as.Date(
@@ -134,8 +134,8 @@ jeopardyData$Date <- as.Date(
 
 Winning Amount
 ==============
-After November 23, 2001 the game doubled the dollar amounts for each answer.
-A `GameMaxValue` variable was added to distinguish games before and after the change:
+* After November 23, 2001 the game doubled the dollar amounts for each answer.
+* A `GameMaxValue` variable was added to distinguish games before and after the change:
 
 ```{r}
 jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date < as.Date("2001-11-23"),
@@ -144,7 +144,8 @@ jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date < as.Date("2001-11-23"),
 
 The Winner
 ==========
-A variable, `IsWinner`, was added to identify the winner(s) in each game (tied final scores result in multiple winners):
+A variable, `IsWinner`, was added to identify the winner(s) in each game
+(tied final scores result in multiple winners):
 
 ```{r}
 isWinner <-
@@ -163,16 +164,11 @@ jeopardyData <- ungroup(jeopardyData)
 
 Gender
 ======
-To analyze the results based on gender,
-the gender of each player needed to determined.
-We used the `gender` package from CRAN.
-The `gender` function from that package takes a first name and returns
-the proportion of males and females with that name
-(along with other attributes).
-We use a cutoff proportion of `0.75` - if the proportion for a gender was
-above the cutoff, we use that gender.
-If it was less, we set the gender to `NA`.
-To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
+* Gender of each player estimated using the `gender` package from CRAN
+* `gender::gender` function returns the proportion of males and females with a name
+* A cutoff proportion of `0.75` used
+  + if the proportion for a gender was at least `0.75`, use that gender.
+  + if it was less than `0.75`, set to `NA`
 
 Gender Computation
 ==================
@@ -206,40 +202,32 @@ jeopardyData$Gender <- uGender[mFirstName]
 
 Gender Results
 ==============
-We were able to predict gender for
+* Gender predictions for
 `r with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)))`
-players which is
-`r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
-percent of the players.
+players
+* `r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)` percent of the players.
 
 Final DataSet
 =============
-The final dataset had `r ncol(jeopardyData)`  variables:
+* The final dataset had `r ncol(jeopardyData)` variables:
 ```{r}
 names(jeopardyData)
 ```
-The complete dataset for analysis has a single player in a game as the basic observation
-i.e.  each row in the data set represents a single player in a game,
-and each games consists of 3 rows.
-So we have
-`r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns which make
-`r nrow(jeopardyData)` player observations and
-`r nrow(jeopardyData) / 3` games.
-There are `r length(unique(jeopardyData$PlayerId))` unique players.
-The games were played from
-`r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`.
+* Each row is data for a single player in a game as the basic observation
+* Each games consists of 3 rows.
+* `r nrow(jeopardyData)` rows and `r ncol(jeopardyData)` columns
+* `r nrow(jeopardyData)` player observations and `r nrow(jeopardyData) / 3` games.
+* There are `r length(unique(jeopardyData$PlayerId))` unique players.
+* Games played from `r min(jeopardyData$Date)` to `r max(jeopardyData$Date)`
 
 Answers
 =======
-
-There are 6 categories x 5 clues per category x 2 rounds = 60 clues
-in each game.
-
-Due to time limitations, the players may not get to all of the clues.
-The number of clues attempted in a game by a single player is
-the sum of the number correct (`NumRight`), the number wrong (`NumWrong`),
-the number of daily doubles correct (`DDRight`)
-and the number of daily doubles wrong (`DDWrong`).
+* 6 categories x 5 clues per category x 2 rounds = 60 clues in each game.
+* A single player answers are:
+  + the sum of the number correct (`NumRight`)
+  + the number wrong (`NumWrong`),
+  + number of daily doubles correct (`DDRight`)
+  + the number of daily doubles wrong (`DDWrong`)
 
 ```{r}
 jeopardyData %>%
@@ -252,7 +240,6 @@ a game by trying 51.
 
 A graphical view of the number of attempted clues:
 ==================================================
-
 ```{r plot01, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
