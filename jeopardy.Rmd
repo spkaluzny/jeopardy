@@ -3,6 +3,8 @@ title: Analysis of Jeopardy Games
 author: Stephen Kaluzny
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
+bibliography: ["packages.bib"]
+link-citations: true
 ---
 
 ```{R setup, include = FALSE, cache = FALSE}
@@ -62,11 +64,11 @@ and the results of those games are posted to the Internet.
 The code for is available on Github at
 [https://github.com/spkal/jeopardy](https://github.com/spkal/jeopardy).
 
-This is also an exercise in using the `dplyr` package
+This is also an exercise in using the `dplyr` package [@R-dplyr]
 for data cleanup and manipulation and
-using the `ggplot2` package for creating graphics
+using the `ggplot2` package [@R-ggplot2] for creating graphics
 We make extensive use of the new pipe operator (`%>%`)
-that was introduced wtih the `dplyr` package.
+that was introduced with the `dplyr` package.
 
 Those key packages are loaded here.
 ```{r}
@@ -1300,3 +1302,6 @@ function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE) {
     df
 }
 ```
+
+`r if (knitr::is_html_output()) '## References {-}'`
+
