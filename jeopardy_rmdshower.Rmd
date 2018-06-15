@@ -64,14 +64,17 @@ and the results of those games are posted to the Internet.
 The code for is available on Github at
 [https://github.com/spkal/jeopardy](https://github.com/spkal/jeopardy).
 
-This is also an exercise in using the `dplyr` package
-for data cleanup and manipulation and
-using the `ggplot2` package for creating graphics
+## Use of TidyVerse
+
+This is also an exercise in using the `tidyverse` packages,
+especially the `dplyr` package,
+for data cleanup and manipulation.
+The `ggplot2` package is used for creating graphics.
 We make extensive use of the new pipe operator (`%>%`)
 that was introduced wtih the `dplyr` package.
 
 Those key packages are loaded here.
-```{r, echo=FALSE}
+```{r}
 library(ggplot2, quietly= TRUE, warn.conflicts = FALSE)
 library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
 ```
@@ -175,6 +178,9 @@ uGender <- ifelse(uGender == "female", "F", uGender)
 #
 uPropMale <- uGenderDF$proportion_male
 uPropFemale <- uGenderDF$proportion_female
+```
+## Gender Computation II
+```{r}
 # Only consider gender that has prop. greater than propCutoff,
 # otherwise, declare it as NA
 propCutoff <- 0.75
@@ -222,7 +228,7 @@ At least one player only attempted 2 clues and while another dominated
 a game by trying 51.
 
 ## A graphical view of the number of attempted clues:
-```{r plot01, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot01code, eval=FALSE}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     ggplot(aes(x=factor(NumAttempted))) +
@@ -230,6 +236,15 @@ jeopardyData %>%
         ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
 
+-----
+
+```{r plot01, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center', echo=FALSE}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    ggplot(aes(x=factor(NumAttempted))) +
+        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        ggtitle("Distribution of Number of Clues Attempted by a Player")
+```
 ## The same graph, by gender
 
 ```{r plot02, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
