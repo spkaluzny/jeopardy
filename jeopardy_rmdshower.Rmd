@@ -232,19 +232,20 @@ a game by trying 51.
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     ggplot(aes(x=factor(NumAttempted))) +
-        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        geom_bar() + xlab("Number Clues (out of 60 total) Attempted by a Player") +
         ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
 
 -----
 
-```{r plot01, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center', echo=FALSE}
+```{r plot01, fig.show='hold', fig.align='center', echo=FALSE}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     ggplot(aes(x=factor(NumAttempted))) +
-        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        geom_bar() + xlab("Number Clues Attempted (out of 60 total) by a Player") +
         ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
+
 ## The same graph, by gender
 
 ```{r plot02, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
