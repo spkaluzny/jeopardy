@@ -179,7 +179,30 @@ above the cutoff, we use that gender.
 If it was less, we set the gender to `NA`.
 To save computing time, we only compute the gender for the unique first names and then applied the results to all players.
 
-```{r}
+```{r, nontidyversegender}
+library(gender)
+firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
+# Estimate gender using the gender from the gender package
+# Only do the unique firstNames
+uFirstName <- unique(firstName)
+uGenderDF <- gender(uFirstName)
+uGender <- uGenderDF$gender
+uFirstName <- uGenderDF$name
+# Code "male" as "M", "female" as "F"
+uGender <- ifelse(uGender == "male", "M", uGender)
+uGender <- ifelse(uGender == "female", "F", uGender)
+# Only consider gender that has prop. greater than propCutoff,
+# otherwise, declare it as NA
+propCutoff <- 0.75
+uGender <- ifelse((!is.na(uGender) & uGender == "M" &
+    uGenderDF$proportion_male < propCutoff), NA, uGender)
+uGender <- ifelse((!is.na(uGender) & uGender == "F" &
+    uGenderDF$proportion_female < propCutoff), NA, uGender)
+mFirstName <- match(firstName, uFirstName)
+jeopardyData$Gender2 <- uGender[mFirstName]
+```
+
+```{r, tidyversegender}
 library(gender)
 jeopardyData <- jeopardyData %>%
   mutate(firstName = gsub("^(.*?)\\s.*", "\\1", Name))
@@ -196,8 +219,7 @@ uGenderDF <- uGenderDF %>%
     TRUE ~ NA_character_))
 jeopardyData <- jeopardyData %>%
   left_join(uGenderDF[, c("name", "Gender")],
-  by=c("firstName" = "name")) %>%
-  select(-firstName)
+  by=c("firstName" = "name"))
 ```
 
 We were able to predict gender for
@@ -205,6 +227,12 @@ We were able to predict gender for
 players which is
 `r round(with(jeopardyData, sum(!duplicated(PlayerId) & !is.na(jeopardyData$Gender)) / sum(!duplicated(PlayerId))) *100, 2)`
 percent of the players.
+
+```{r gendercleanup}
+# remove firstName and Gender2
+jeopardyData <- jeopardyData %>%
+  select(-firstName, -Gender2)
+```
 
 ## Final DataSet
 The final dataset had `r ncol(jeopardyData)`  variables:

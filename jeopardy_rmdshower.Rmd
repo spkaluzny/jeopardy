@@ -162,34 +162,45 @@ jeopardyData <- ungroup(jeopardyData)
     * if the proportion for a gender was at least `0.75`, use that gender.
     * if it was less than `0.75`, set to `NA`
 
-## Gender Computation
-```{r}
+## Gender Computation (non-Tidyverse)
+```{r eval=FALSE}
+library(gender)
 firstName <- with(jeopardyData, gsub("^(.*?)\\s.*", "\\1", Name))
-# Only do the unique firstNames
-uFirstName <- unique(firstName)
-uGenderDF <- gender::gender(uFirstName)
-# Extract gender and unique first names that gender can recognize:
+uFirstName <- unique(firstName)  # Only do the unique firstNames
+uGenderDF <- gender(uFirstName)
 uGender <- uGenderDF$gender
 uFirstName <- uGenderDF$name
-#
 # Code "male" as "M", "female" as "F"
 uGender <- ifelse(uGender == "male", "M", uGender)
 uGender <- ifelse(uGender == "female", "F", uGender)
-#
-uPropMale <- uGenderDF$proportion_male
-uPropFemale <- uGenderDF$proportion_female
-```
-## Gender Computation II
-```{r}
-# Only consider gender that has prop. greater than propCutoff,
-# otherwise, declare it as NA
+# Only consider gender that has prop. greater than propCutoff, otherwise NA
 propCutoff <- 0.75
 uGender <- ifelse((!is.na(uGender) & uGender == "M" &
-    uPropMale < propCutoff), NA, uGender)
+    uGenderDF$proportion_male < propCutoff), NA, uGender)
 uGender <- ifelse((!is.na(uGender) & uGender == "F" &
-    uPropFemale < propCutoff), NA, uGender)
+    uGenderDF$proportion_female < propCutoff), NA, uGender)
 mFirstName <- match(firstName, uFirstName)
 jeopardyData$Gender <- uGender[mFirstName]
+```
+
+## Gender Computation
+```{r gender}
+library(gender)
+jeopardyData <- jeopardyData %>%
+  mutate(firstName = gsub("^(.*?)\\s.*", "\\1", Name))
+# Only do the unique firstNames
+uGenderDF <- gender(unique(jeopardyData[["firstName"]]))
+# Only consider gender that has prop. greater than propCutoff, otherwise NA
+propCutoff <- 0.75
+uGenderDF <- uGenderDF %>%
+  mutate(Gender = case_when(
+    proportion_male > propCutoff ~ "M",
+    proportion_female > propCutoff ~ "F",
+    TRUE ~ NA_character_))
+jeopardyData <- jeopardyData %>%
+  left_join(uGenderDF[, c("name", "Gender")],
+  by=c("firstName" = "name")) %>%
+  select(-firstName)
 ```
 
 ## Gender Results
@@ -213,11 +224,10 @@ names(jeopardyData)
 ## Answers
 * 6 categories x 5 clues per category x 2 rounds = 60 clues in each game.
 * A single player answers are:
-  + the sum of the number correct (`NumRight`)
-  + the number wrong (`NumWrong`),
-  + number of daily doubles correct (`DDRight`)
-  + the number of daily doubles wrong (`DDWrong`)
-
+    * the sum of the number correct (`NumRight`)
+    * the number wrong (`NumWrong`),
+    * number of daily doubles correct (`DDRight`)
+    * the number of daily doubles wrong (`DDWrong`)
 ```{r}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
