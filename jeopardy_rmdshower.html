@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analysis of Jeopardy Games</title>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="jeopardy_rmdshower_files/shower-material/package/styles/screen-16x10.css">
+  <link rel="stylesheet" href="jeopardy_rmdshower_files/rmdshower/style-common.css">
+  <link rel="stylesheet" href="jeopardy_rmdshower_files/rmdshower/style-material.css">
+  <link rel="stylesheet" href="jeopardy_rmdshower_files/shower-material/style-override.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.js"></script>
+  <script src="jeopardy_rmdshower_files/rmdshower/auto-render.min.js" type="text/javascript"></script>
+  
+  
+    <style type="text/css">
+   div.sourceCode { overflow-x: auto; }
+   table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+     margin: 0; padding: 0; vertical-align: baseline; border: none; }
+   table.sourceCode { width: 100%; line-height: 100%; }
+   td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+   td.sourceCode { padding-left: 5px; }
+   code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+   code > span.dt { color: #902000; } /* DataType */
+   code > span.dv { color: #40a070; } /* DecVal */
+   code > span.bn { color: #40a070; } /* BaseN */
+   code > span.fl { color: #40a070; } /* Float */
+   code > span.ch { color: #4070a0; } /* Char */
+   code > span.st { color: #4070a0; } /* String */
+   code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+   code > span.ot { color: #007020; } /* Other */
+   code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+   code > span.fu { color: #06287e; } /* Function */
+   code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+   code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+   code > span.cn { color: #880000; } /* Constant */
+   code > span.sc { color: #4070a0; } /* SpecialChar */
+   code > span.vs { color: #4070a0; } /* VerbatimString */
+   code > span.ss { color: #bb6688; } /* SpecialString */
+   code > span.im { } /* Import */
+   code > span.va { color: #19177c; } /* Variable */
+   code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+   code > span.op { color: #666666; } /* Operator */
+   code > span.bu { } /* BuiltIn */
+   code > span.ex { } /* Extension */
+   code > span.pp { color: #bc7a00; } /* Preprocessor */
+   code > span.at { color: #7d9029; } /* Attribute */
+   code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+   code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+   code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+   code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  
+  
+  
+</head>
+
+<body class="shower list">
+
+  <header class="caption">
+    <h1>Analysis of Jeopardy Games</h1>
+    <p>Stephen Kaluzny</p>
+  </header>
+
+  
+  
+<section id="jeopardy---the-game" class="slide level2">
+<h2>Jeopardy - The Game</h2>
+<ul>
+<li>Television quiz show where three contestants compete to answer quesions</li>
+<li>Their responses must be in the form of a question</li>
+<li>The daily syndicated version of the show has been on the air since 1984.</li>
+</ul>
+</section>
+<section id="game-description" class="slide level2">
+<h2>Game Description</h2>
+<ul>
+<li>The show has two rounds and a final.</li>
+<li>Each round has 6 categories each with 5 clues</li>
+<li>Clues have increasing dollar amounts within a category.</li>
+</ul>
+</section>
+<section id="final-jeopardy" class="slide level2">
+<h2>Final Jeopardy</h2>
+<ul>
+<li>Players are told the category</li>
+<li>They can wager as much of their score</li>
+<li>30 seconds to write down answer</li>
+<li>Player with the highest score wins that amount in dollars
+<ul>
+<li>plays in the next day’s game against two new players.</li>
+</ul></li>
+</ul>
+</section>
+<section id="jeopardy-data" class="slide level2">
+<h2>Jeopardy Data</h2>
+<ul>
+<li>Data scraped from Internet site</li>
+<li>Information about players
+<ul>
+<li>name, home city, occupation</li>
+<li>number of correct and wrong answers</li>
+<li>daily double play</li>
+<li>number of games played, winnings</li>
+</ul></li>
+</ul>
+</section>
+<section id="purpose-of-this-analysis" class="slide level2">
+<h2>Purpose of This Analysis</h2>
+<p>This document is an example of a data analysis using Open Source R.</p>
+<p>This is a reproducible analysis. All code to recreate the analysis, from getting the data, cleaning it, computing summaries, to creating graphics is included. This means that the analysis can be rerun at a future time after more Jeopardy games have been played and the results of those games are posted to the Internet. The code for is available on Github at <a href="https://github.com/spkal/jeopardy" class="uri">https://github.com/spkal/jeopardy</a>.</p>
+</section>
+<section id="use-of-tidyverse" class="slide level2">
+<h2>Use of TidyVerse</h2>
+<p>This is also an exercise in using the <code>tidyverse</code> packages, especially the <code>dplyr</code> package, for data cleanup and manipulation. The <code>ggplot2</code> package is used for creating graphics. We make extensive use of the new pipe operator (<code>%&gt;%</code>) that was introduced wtih the <code>dplyr</code> package.</p>
+<p>Those key packages are loaded here.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2, <span class="dt">quietly=</span> <span class="ot">TRUE</span>, <span class="dt">warn.conflicts =</span> <span class="ot">FALSE</span>)
+<span class="kw">library</span>(dplyr, <span class="dt">quietly=</span> <span class="ot">TRUE</span>, <span class="dt">warn.conflicts =</span> <span class="ot">FALSE</span>)</code></pre></div>
+</section>
+<section id="the-data" class="slide level2">
+<h2>The Data</h2>
+<ul>
+<li>The data was scraped from the <a href="http://www.j-archive.com">http://www.j-archive.com site</a> site</li>
+<li>Only regular Jeopardy games were downloaded, leaving out championships, teen, college, etc tournaments.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyDataRaw &lt;-<span class="st"> </span><span class="kw">jscrapeDirect</span>()</code></pre></div>
+</section>
+<section id="scraped-data" class="slide level2">
+<h2>Scraped Data</h2>
+<p>The scraped data has 15 columns:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">names</span>(jeopardyDataRaw)
+<span class="co">#&gt;  [1] &quot;Title&quot;                &quot;WebId&quot;                &quot;Name&quot;                </span>
+<span class="co">#&gt;  [4] &quot;Occupation&quot;           &quot;City&quot;                 &quot;State&quot;               </span>
+<span class="co">#&gt;  [7] &quot;num_times_on_show&quot;    &quot;first_round_winnings&quot; &quot;Winnings_2nd_Round&quot;  </span>
+<span class="co">#&gt; [10] &quot;Final_Winnings&quot;       &quot;Show&quot;                 &quot;n.Right&quot;             </span>
+<span class="co">#&gt; [13] &quot;n.Wrong&quot;              &quot;DD.Wrong&quot;             &quot;DD.Right&quot;</span></code></pre></div>
+</section>
+<section id="cleaning-the-data" class="slide level2">
+<h2>Cleaning the Data</h2>
+<ul>
+<li>Variables were renamed to a consistent and descriptive naming scheme.
+<ul>
+<li>values in the wrong column</li>
+<li>spelling error in names of cities and states,</li>
+<li>now living in …&quot; and “now stationed at …” to listed location</li>
+</ul></li>
+<li>The cleaning was an iterative process
+<ul>
+<li>looking at summaries of the data</li>
+<li>finding more errors,</li>
+<li>making corrections</li>
+</ul></li>
+</ul>
+</section>
+<section id="clean-function" class="slide level2">
+<h2>Clean Function</h2>
+<ul>
+<li>The clean up operations were all encapsulate in a single function <code>jcleanData</code></li>
+<li>Run on the scraped data</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData &lt;-<span class="st"> </span><span class="kw">jcleanData</span>(jeopardyDataRaw)</code></pre></div>
+</section>
+<section id="additional-variables" class="slide level2">
+<h2>Additional Variables</h2>
+<ul>
+<li><code>PlayerId</code> was created by pasting together the <code>Name</code>, <code>Occupation</code>, <code>City</code>, and <code>State</code>:</li>
+<li>Analysis of <code>PlayerId</code> indicated that it uniquely identified players</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData$PlayerId &lt;-<span class="st"> </span><span class="kw">with</span>(jeopardyData,
+    <span class="kw">paste</span>(Name, Occupation, City, State, <span class="dt">sep=</span><span class="st">&#39;.&#39;</span>))</code></pre></div>
+<ul>
+<li><code>Date</code> variable was extracted from information in the <code>Title</code> variable</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">airedIndex &lt;-<span class="st"> </span><span class="kw">regexpr</span>(<span class="st">&quot; aired &quot;</span>, jeopardyData$Title)
+jeopardyData$Date &lt;-<span class="st"> </span><span class="kw">as.Date</span>(
+    <span class="kw">substr</span>(jeopardyData$Title, airedIndex +<span class="st"> </span><span class="dv">7</span>, <span class="kw">nchar</span>(jeopardyData$Title)))</code></pre></div>
+</section>
+<section id="winning-amount" class="slide level2">
+<h2>Winning Amount</h2>
+<ul>
+<li>After November 23, 2001 the game doubled the dollar amounts for each answer.</li>
+<li>A <code>GameMaxValue</code> variable was added to distinguish games before and after the change:</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData$GameMaxValue &lt;-<span class="st"> </span><span class="kw">ifelse</span>(jeopardyData$Date &lt;<span class="st"> </span><span class="kw">as.Date</span>(<span class="st">&quot;2001-11-23&quot;</span>),
+    <span class="st">&quot;Max1000&quot;</span>, <span class="st">&quot;Max2000&quot;</span>)</code></pre></div>
+</section>
+<section id="the-winner" class="slide level2">
+<h2>The Winner</h2>
+<p>A variable, <code>IsWinner</code>, was added to identify the winner(s) in each game (tied final scores result in multiple winners):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">isWinner &lt;-
+function (x)
+{
+    r &lt;-<span class="st"> </span><span class="kw">rank</span>(x)
+    if (<span class="kw">all</span>(r ==<span class="st"> </span><span class="dv">2</span>)) {
+        r &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">4</span>)
+    }
+    (r ==<span class="st"> </span><span class="dv">3</span>) |<span class="st"> </span>(r ==<span class="st"> </span><span class="fl">2.5</span>) |<span class="st"> </span>(r ==<span class="st"> </span><span class="dv">4</span>)
+}
+jeopardyData &lt;-<span class="st"> </span><span class="kw">group_by</span>(jeopardyData, Show) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">IsWinner =</span> <span class="kw">isWinner</span>(FinalScore))
+jeopardyData &lt;-<span class="st"> </span><span class="kw">ungroup</span>(jeopardyData)</code></pre></div>
+</section>
+<section id="gender" class="slide level2">
+<h2>Gender</h2>
+<ul>
+<li>Gender of each player estimated using the <code>gender</code> package from CRAN</li>
+<li><code>gender::gender</code> function returns the proportion of males and females with a name</li>
+<li>A cutoff proportion of <code>0.75</code> used
+<ul>
+<li>if the proportion for a gender was at least <code>0.75</code>, use that gender.</li>
+<li>if it was less than <code>0.75</code>, set to <code>NA</code></li>
+</ul></li>
+</ul>
+</section>
+<section id="gender-computation-non-tidyverse" class="slide level2">
+<h2>Gender Computation (non-Tidyverse)</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(gender)
+firstName &lt;-<span class="st"> </span><span class="kw">with</span>(jeopardyData, <span class="kw">gsub</span>(<span class="st">&quot;^(.*?)</span><span class="ch">\\</span><span class="st">s.*&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&quot;</span>, Name))
+uFirstName &lt;-<span class="st"> </span><span class="kw">unique</span>(firstName)  <span class="co"># Only do the unique firstNames</span>
+uGenderDF &lt;-<span class="st"> </span><span class="kw">gender</span>(uFirstName)
+uGender &lt;-<span class="st"> </span>uGenderDF$gender
+uFirstName &lt;-<span class="st"> </span>uGenderDF$name
+<span class="co"># Code &quot;male&quot; as &quot;M&quot;, &quot;female&quot; as &quot;F&quot;</span>
+uGender &lt;-<span class="st"> </span><span class="kw">ifelse</span>(uGender ==<span class="st"> &quot;male&quot;</span>, <span class="st">&quot;M&quot;</span>, uGender)
+uGender &lt;-<span class="st"> </span><span class="kw">ifelse</span>(uGender ==<span class="st"> &quot;female&quot;</span>, <span class="st">&quot;F&quot;</span>, uGender)
+<span class="co"># Only consider gender that has prop. greater than propCutoff, otherwise NA</span>
+propCutoff &lt;-<span class="st"> </span><span class="fl">0.75</span>
+uGender &lt;-<span class="st"> </span><span class="kw">ifelse</span>((!<span class="kw">is.na</span>(uGender) &amp;<span class="st"> </span>uGender ==<span class="st"> &quot;M&quot;</span> &amp;
+<span class="st">    </span>uGenderDF$proportion_male &lt;<span class="st"> </span>propCutoff), <span class="ot">NA</span>, uGender)
+uGender &lt;-<span class="st"> </span><span class="kw">ifelse</span>((!<span class="kw">is.na</span>(uGender) &amp;<span class="st"> </span>uGender ==<span class="st"> &quot;F&quot;</span> &amp;
+<span class="st">    </span>uGenderDF$proportion_female &lt;<span class="st"> </span>propCutoff), <span class="ot">NA</span>, uGender)
+mFirstName &lt;-<span class="st"> </span><span class="kw">match</span>(firstName, uFirstName)
+jeopardyData$Gender &lt;-<span class="st"> </span>uGender[mFirstName]</code></pre></div>
+</section>
+<section id="gender-computation" class="slide level2">
+<h2>Gender Computation</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(gender)
+jeopardyData &lt;-<span class="st"> </span>jeopardyData %&gt;%
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">firstName =</span> <span class="kw">gsub</span>(<span class="st">&quot;^(.*?)</span><span class="ch">\\</span><span class="st">s.*&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&quot;</span>, Name))
+<span class="co"># Only do the unique firstNames</span>
+uGenderDF &lt;-<span class="st"> </span><span class="kw">gender</span>(<span class="kw">unique</span>(jeopardyData[[<span class="st">&quot;firstName&quot;</span>]]))
+<span class="co"># Only consider gender that has prop. greater than propCutoff, otherwise NA</span>
+propCutoff &lt;-<span class="st"> </span><span class="fl">0.75</span>
+uGenderDF &lt;-<span class="st"> </span>uGenderDF %&gt;%
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Gender =</span> <span class="kw">case_when</span>(
+    proportion_male &gt;<span class="st"> </span>propCutoff ~<span class="st"> &quot;M&quot;</span>,
+    proportion_female &gt;<span class="st"> </span>propCutoff ~<span class="st"> &quot;F&quot;</span>,
+    <span class="ot">TRUE</span> ~<span class="st"> </span><span class="ot">NA_character_</span>))
+jeopardyData &lt;-<span class="st"> </span>jeopardyData %&gt;%
+<span class="st">  </span><span class="kw">left_join</span>(uGenderDF[, <span class="kw">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;Gender&quot;</span>)],
+  <span class="dt">by=</span><span class="kw">c</span>(<span class="st">&quot;firstName&quot;</span> =<span class="st"> &quot;name&quot;</span>)) %&gt;%
+<span class="st">  </span><span class="kw">select</span>(-firstName)</code></pre></div>
+</section>
+<section id="gender-results" class="slide level2">
+<h2>Gender Results</h2>
+<ul>
+<li>Gender predictions for 9259 players</li>
+<li>95.91 percent of the players.</li>
+</ul>
+</section>
+<section id="final-dataset" class="slide level2">
+<h2>Final DataSet</h2>
+<ul>
+<li>The final dataset had 20 variables:</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">names</span>(jeopardyData)
+<span class="co">#&gt;  [1] &quot;Title&quot;            &quot;WebId&quot;            &quot;Name&quot;            </span>
+<span class="co">#&gt;  [4] &quot;Occupation&quot;       &quot;City&quot;             &quot;State&quot;           </span>
+<span class="co">#&gt;  [7] &quot;NumTimesOnShow&quot;   &quot;FirstRoundScore&quot;  &quot;SecondRoundScore&quot;</span>
+<span class="co">#&gt; [10] &quot;FinalScore&quot;       &quot;Show&quot;             &quot;NumRight&quot;        </span>
+<span class="co">#&gt; [13] &quot;NumWrong&quot;         &quot;DDWrong&quot;          &quot;DDRight&quot;         </span>
+<span class="co">#&gt; [16] &quot;PlayerId&quot;         &quot;Date&quot;             &quot;GameMaxValue&quot;    </span>
+<span class="co">#&gt; [19] &quot;IsWinner&quot;         &quot;Gender&quot;</span></code></pre></div>
+<ul>
+<li>Each row is data for a single player in a game as the basic observation</li>
+<li>Each games consists of 3 rows.</li>
+<li>14040 rows and 20 columns</li>
+<li>14040 player observations and 4680 games.</li>
+<li>There are 9654 unique players.</li>
+<li>Games played from 1984-09-10 to 2018-04-03</li>
+</ul>
+</section>
+<section id="answers" class="slide level2">
+<h2>Answers</h2>
+<ul>
+<li>6 categories x 5 clues per category x 2 rounds = 60 clues in each game.</li>
+<li>A single player answers are:
+<ul>
+<li>the sum of the number correct (<code>NumRight</code>)</li>
+<li>the number wrong (<code>NumWrong</code>),</li>
+<li>number of daily doubles correct (<code>DDRight</code>)</li>
+<li>the number of daily doubles wrong (<code>DDWrong</code>)</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumAttempted =</span> NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">summary</span>(NumAttempted))
+<span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
+<span class="co">#&gt;    2.00   16.00   20.00   20.24   24.00   51.00</span></code></pre></div>
+<p>At least one player only attempted 2 clues and while another dominated a game by trying 51.</p>
+</section>
+<section id="a-graphical-view-of-the-number-of-attempted-clues" class="slide level2">
+<h2>A graphical view of the number of attempted clues:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumAttempted =</span> NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span><span class="kw">factor</span>(NumAttempted))) +
+<span class="st">        </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;Number Clues (out of 60 total) Attempted by a Player&quot;</span>) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Distribution of Number of Clues Attempted by a Player&quot;</span>)</code></pre></div>
+</section>
+<section class="slide level2">
+
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot01-1.png" width="768" style="display: block; margin: auto;" /></p>
+</section>
+<section id="the-same-graph-by-gender" class="slide level2">
+<h2>The same graph, by gender</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumAttempted =</span> NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(!<span class="kw">is.na</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span><span class="kw">factor</span>(NumAttempted))) +
+<span class="st">        </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;Number Clues Attempted by a Player&quot;</span>) +
+<span class="st">        </span><span class="kw">facet_grid</span>(Gender ~<span class="st"> </span>.) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Distribution of Clues Attempted by Gender&quot;</span>)</code></pre></div>
+</section>
+<section class="slide level2">
+
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot02-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Men tend to attempt more questions then women and the range of values is wider for men including some that attempt over 50 of the possible questions.</p>
+<p>Note that the sum of <code>NumAttempted</code> across all three players in a game is not the same as the total number of clues tried in that game since after an incorrect response by a players, another play can try to answer that same question.</p>
+</section>
+<section id="the-percentage-of-clues-answers-correctly" class="slide level2">
+<h2>The percentage of clues answers correctly</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">PercentCorrect =</span>
+        (NumRight +<span class="st"> </span>DDRight) /<span class="st"> </span>(NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) *<span class="st"> </span><span class="dv">100</span>) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">summary</span>(PercentCorrect))
+<span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
+<span class="co">#&gt;   25.00   77.27   84.62   83.54   90.91  100.00</span></code></pre></div>
+</section>
+<section id="a-density-plot-of-the-percent-correct-answers" class="slide level2">
+<h2>A density plot of the percent correct answers:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">PercentCorrect =</span>
+        (NumRight +<span class="st"> </span>DDRight) /
+<span class="st">            </span>(NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) *<span class="st"> </span><span class="dv">100</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>PercentCorrect)) +
+<span class="st">        </span><span class="kw">geom_density</span>()</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot03-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>The most common percent correct values are between 82 and 90, then it drops off but rises again at 100 percent.</p>
+</section>
+<section id="always-right" class="slide level2">
+<h2>Always Right</h2>
+<p>Here is the distribution of attempted clues for those who always answer correctly compared to other players. We use a density plot instead of counts since the total numbers in each group are vastly different.</p>
+</section>
+<section id="section" class="slide level2">
+<h2></h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumAttempted =</span> NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight,
+        <span class="dt">PercentCorrect =</span> (NumRight +<span class="st"> </span>DDRight) /
+<span class="st">            </span>(NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) *<span class="st"> </span><span class="dv">100</span>,
+        <span class="dt">AlwaysRight =</span> (PercentCorrect &gt;<span class="st"> </span><span class="dv">99</span>)) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> NumAttempted, <span class="dt">color=</span>AlwaysRight)) +
+<span class="st">        </span><span class="kw">geom_density</span>() +
+<span class="st">        </span><span class="kw">xlab</span>(<span class="st">&quot;Number of Clues Attempted&quot;</span>) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number Attempted for Perfect Player vs Other Players&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot04-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Most players who get all questions correct tend not to attempt as many questions as other players.</p>
+</section>
+<section id="density-of-percent-correct-answers-by-gender" class="slide level2">
+<h2>Density of percent correct answers by gender</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(!<span class="kw">is.na</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">PercentCorrect =</span>
+        (NumRight +<span class="st"> </span>DDRight) /
+<span class="st">            </span>(NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) *<span class="st"> </span><span class="dv">100</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>PercentCorrect, <span class="dt">color=</span>Gender)) +
+<span class="st">        </span><span class="kw">geom_density</span>() +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Density of Percent Correct by Gender&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot05-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>We have the spike at 100 percent for both female and male players. The female players have a more spread out distribution of percent correct and their peak is slightly less than the peak for the male players.</p>
+</section>
+<section id="daily-doubles" class="slide level2">
+<h2>Daily Doubles</h2>
+<p>There are 3 daily doubles in each game, one in the Jeopardy Round and two in the Double Jeopardy round. The player who gets the daily double questions can wager as much of their current score on the question.</p>
+<p>The number of daily doubles found by players in a game:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">DDCount =</span> DDWrong +<span class="st"> </span>DDRight) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">cbind</span>(<span class="dt">NumDD =</span> <span class="dv">0</span>:<span class="dv">3</span>, <span class="dt">DDCount =</span> <span class="kw">table</span>(DDCount),
+       <span class="dt">Percent =</span>  <span class="kw">round</span>(<span class="kw">table</span>(DDCount) /<span class="st">  </span><span class="kw">sum</span>(<span class="kw">table</span>(DDCount)) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;   NumDD DDCount Percent</span>
+<span class="co">#&gt; 0     0    4557   32.46</span>
+<span class="co">#&gt; 1     1    5763   41.05</span>
+<span class="co">#&gt; 2     2    3090   22.01</span>
+<span class="co">#&gt; 3     3     630    4.49</span></code></pre></div>
+</section>
+<section id="the-percentage-of-all-daily-doubles-answered-correctly" class="slide level2">
+<h2>The percentage of all daily doubles answered correctly</h2>
+<p><code>r jeopardyData %&gt;%     filter(DDWrong + DDRight &gt; 0) %&gt;%     summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))</code> percent.</p>
+</section>
+<section id="number-of-final-jeopardy-players" class="slide level2">
+<h2>Number of Final Jeopardy Players</h2>
+<p>If a player has a score of 0 or less at the end of the double jeopardy round, that player is eliminated from the final jeopardy round. The number of players in Final Jeopardy:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">NFinal &lt;-<span class="st"> </span>jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumberInFinal =</span> <span class="kw">sum</span>(SecondRoundScore &gt;<span class="st"> </span><span class="dv">0</span>)) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">NumberInFinal =</span> <span class="kw">first</span>(NumberInFinal)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">table</span>(NumberInFinal))
+<span class="kw">cbind</span>(<span class="dt">NumberOfPlayers=</span><span class="dv">1</span>:<span class="dv">3</span>, <span class="dt">Count =</span> NFinal,
+    <span class="dt">Percentage =</span> <span class="kw">round</span>(NFinal /<span class="st"> </span><span class="kw">sum</span>(NFinal) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>))
+<span class="co">#&gt;   NumberOfPlayers Count Percentage</span>
+<span class="co">#&gt; 1               1     3       0.06</span>
+<span class="co">#&gt; 2               2   274       5.85</span>
+<span class="co">#&gt; 3               3  4403      94.08</span></code></pre></div>
+<p>The shows with only one player left for Final Jeopardy:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumberInFinal =</span> <span class="kw">sum</span>(SecondRoundScore &gt;<span class="st"> </span><span class="dv">0</span>)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(NumberInFinal ==<span class="st"> </span><span class="dv">1</span>) %&gt;%
+<span class="st">    </span><span class="kw">select</span>(Date, Name, SecondRoundScore) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt; Adding missing grouping variables: `Show`</span>
+<span class="co">#&gt;   Show       Date              Name SecondRoundScore</span>
+<span class="co">#&gt; 1 6108 2011-03-16      Peter Perigo            -1400</span>
+<span class="co">#&gt; 2 6108 2011-03-16    Rebecca Rogers            -3600</span>
+<span class="co">#&gt; 3 6108 2011-03-16        Tom Kunzen            29200</span>
+<span class="co">#&gt; 4 7024 2015-03-12    Stephanie Hull            -6800</span>
+<span class="co">#&gt; 5 7024 2015-03-12         Brad King             -200</span>
+<span class="co">#&gt; 6 7024 2015-03-12 Kristin Sausville             8400</span>
+<span class="co">#&gt; 7  668 1987-07-01 Patti Demerirjian             -500</span>
+<span class="co">#&gt; 8  668 1987-07-01          Bob Rome            -1500</span>
+<span class="co">#&gt; 9  668 1987-07-01      Doug Molitor             9500</span></code></pre></div>
+</section>
+<section id="runaways" class="slide level2">
+<h2>Runaways</h2>
+<p>A runaway game is when one player cannot be beat in Final Jeopardy. This will occur when one player has at least twice the score of each of the other players at the end of the Double Jeopardy round.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">isRunaway &lt;-<span class="st"> </span>function(score) {
+    score &lt;-<span class="st"> </span><span class="kw">sort</span>(score)
+    <span class="kw">all</span>(score[<span class="dv">3</span>] &gt;=<span class="st"> </span><span class="dv">2</span>*score[-<span class="dv">3</span>])
+}
+jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Runaway =</span> <span class="kw">isRunaway</span>(SecondRoundScore)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">c</span>(<span class="dt">NumberRunaways=</span><span class="kw">sum</span>(Runaway),
+        <span class="dt">PercentRunaways=</span><span class="kw">round</span>(<span class="kw">sum</span>(Runaway) /<span class="st"> </span><span class="kw">length</span>(Runaway) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;  NumberRunaways PercentRunaways </span>
+<span class="co">#&gt;         1254.00           26.79</span></code></pre></div>
+</section>
+<section id="ties" class="slide level2">
+<h2>Ties</h2>
+<p>How often does the game end with multiple winners (i.e. a tie)?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumWinners =</span> <span class="kw">sum</span>(IsWinner)) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">NumWinners =</span> <span class="kw">first</span>(NumWinners)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">cbind</span>(<span class="dt">Winners =</span> <span class="dv">1</span>:<span class="dv">3</span>, <span class="dt">Count =</span> <span class="kw">table</span>(NumWinners),
+        <span class="dt">Percent =</span> <span class="kw">round</span>(<span class="kw">table</span>(NumWinners) /<span class="st"> </span><span class="kw">sum</span>(NumWinners) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;   Winners Count Percent</span>
+<span class="co">#&gt; 1       1  4631   97.87</span>
+<span class="co">#&gt; 2       2    46    0.97</span>
+<span class="co">#&gt; 3       3     3    0.06</span></code></pre></div>
+<p>Most games have only one winner. In two games, all three people had the same final score.</p>
+</section>
+<section id="comebacks" class="slide level2">
+<h2>Comebacks</h2>
+<p>How often does the player with the lowest score at the end of the double jeopardy round, win the game?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">IsComeback =</span> (SecondRoundScore ==<span class="st"> </span><span class="kw">min</span>(SecondRoundScore))) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(IsWinner) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">c</span>(<span class="dt">Count =</span> <span class="kw">sum</span>(IsComeback),
+        <span class="dt">Percent =</span> <span class="kw">round</span>(<span class="kw">sum</span>(IsComeback) /<span class="st"> </span><span class="kw">length</span>(IsComeback) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;   Count Percent </span>
+<span class="co">#&gt;  297.00    6.28</span></code></pre></div>
+</section>
+<section id="final-jeopardy-stumpers" class="slide level2">
+<h2>Final Jeopardy Stumpers</h2>
+<p>How often do all the players miss the Final Jeopardy questions? The data does not include any specific information about the Final Jeopardy question or wager. If the <code>FinalScore</code> is larger than the <code>SecondRoundScore</code>, we know the player answered Final Jeopardy correctly. Similarly, if <code>FinalScore</code> is less than <code>SecondRoundScore</code>, their response for Final Jeopardy was incorrect. If the <code>FinalScore</code> is the same as the <code>SecondRoundScore</code>, we only know that the player did not wager anything in Final Jeopardy, their response could have been correct or wrong. So we only count those who made a wager in Final Jeopardy.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">isStumper &lt;-<span class="st"> </span>function(score2, score3) {
+    <span class="kw">all</span>(score3 &lt;<span class="st"> </span>score2)
+}
+jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(<span class="kw">all</span>(SecondRoundScore !=<span class="st"> </span>FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">IsStumper =</span> <span class="kw">isStumper</span>(SecondRoundScore, FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">c</span>(<span class="dt">Count =</span> <span class="kw">sum</span>(IsStumper), <span class="dt">Games =</span> <span class="kw">length</span>(IsStumper),
+        <span class="dt">Percent =</span> <span class="kw">round</span>(<span class="kw">sum</span>(IsStumper) /<span class="st"> </span><span class="kw">length</span>(IsStumper) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;   Count   Games Percent </span>
+<span class="co">#&gt;  771.00 3815.00   20.21</span></code></pre></div>
+</section>
+<section id="dollar-winnings-in-a-game" class="slide level2">
+<h2>Dollar Winnings in a Game</h2>
+<p>When looking at the dollar winnings for a game we need to look separately at games before the dollar values doubled and after.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(IsWinner) %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(GameMaxValue) %&gt;%
+<span class="st">    </span><span class="kw">summarize</span>(<span class="dt">AveWinnings=</span><span class="kw">mean</span>(FinalScore),
+        <span class="dt">MedianWinnings=</span><span class="kw">median</span>(FinalScore),
+        <span class="dt">MinWinnings=</span><span class="kw">min</span>(FinalScore),
+        <span class="dt">MaxWinnings=</span><span class="kw">max</span>(FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;   GameMaxValue AveWinnings MedianWinnings MinWinnings MaxWinnings</span>
+<span class="co">#&gt; 1      Max1000    10127.26          10001           0       34000</span>
+<span class="co">#&gt; 2      Max2000    20067.98          20000           0       77000</span></code></pre></div>
+<p>The mean and median winnings are both about doubled when the dollar amounts doubled.</p>
+<p>The shows where the winning score was 0:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(IsWinner, FinalScore ==<span class="st"> </span><span class="dv">0</span>) %&gt;%
+<span class="st">    </span><span class="kw">select</span>(Date, Name, FinalScore) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;         Date             Name FinalScore</span>
+<span class="co">#&gt; 1 1984-09-11    Paul Schaffer          0</span>
+<span class="co">#&gt; 2 1984-09-11   Lynne Crawford          0</span>
+<span class="co">#&gt; 3 1984-09-11     Greg Hopkins          0</span>
+<span class="co">#&gt; 4 1998-06-12      Robert Levy          0</span>
+<span class="co">#&gt; 5 1998-06-12    Steve Sosnick          0</span>
+<span class="co">#&gt; 6 2016-01-18 Randi Kristensen          0</span>
+<span class="co">#&gt; 7 2016-01-18 Claudia Corriere          0</span>
+<span class="co">#&gt; 8 2016-01-18    Mike Drummond          0</span></code></pre></div>
+<p>In one game, all 3 players won with 0 and in another game, two players tied with a score of 0. Actually, none of the players were considered winners since none of these players played in the next day’s game.</p>
+</section>
+<section id="distribution-of-winnings" class="slide level2">
+<h2>Distribution of Winnings</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">filter</span>(jeopardyData, IsWinner) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>FinalScore)) +
+<span class="st">    </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">2000</span>) +
+<span class="st">    </span><span class="kw">facet_grid</span>(GameMaxValue ~<span class="st"> </span>.) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Distribution of Game Winnings&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot06-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>There are 9075 with GameMaxValue of Max2000 compared to only 4965 for Max1000. It is no surprising that the spread of the FinalScore values is larger for the Max2000 group.</p>
+</section>
+<section id="the-players" class="slide level2">
+<h2>The Players</h2>
+<p>The <code>NumTimesOnShow</code> variable increases each time the player is on the show. We want to look at the maximum value of <code>NumTimeOnShow</code> for each player:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">summary</span>(MaxNumGames))
+<span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
+<span class="co">#&gt;   1.000   1.000   1.000   2.606   3.000  75.000</span></code></pre></div>
+<p>Half the players only are on one show. Which is not surprising since two players (usually) do not return. One player was on 75 times. We will investigate that player later.</p>
+</section>
+<section id="games-by-gender" class="slide level2">
+<h2>Games by Gender</h2>
+<p>Number of games played by gender:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(!<span class="kw">is.na</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow)) %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Gender) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Min=</span><span class="kw">min</span>(MaxNumGames), <span class="dt">Median=</span><span class="kw">median</span>(MaxNumGames),
+        <span class="dt">Mean=</span><span class="kw">mean</span>(MaxNumGames), <span class="dt">Max=</span><span class="kw">max</span>(MaxNumGames)) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;   Gender Min Median     Mean Max</span>
+<span class="co">#&gt; 1      F   1      1 1.863991  21</span>
+<span class="co">#&gt; 2      M   1      2 3.168821  75</span></code></pre></div>
+</section>
+<section id="most-wins" class="slide level2">
+<h2>Most Wins</h2>
+<p>Looking at the players who won the most games (10 or more), the Date is the date of their final game:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Name =</span> <span class="kw">first</span>(Name), <span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow),
+        <span class="dt">Date =</span> <span class="kw">max</span>(Date)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(MaxNumGames &gt;=<span class="st"> </span><span class="dv">10</span>) %&gt;%
+<span class="st">    </span><span class="kw">select</span>(Name, MaxNumGames, Date) %&gt;%
+<span class="st">    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(MaxNumGames), <span class="kw">desc</span>(Date)) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;             Name MaxNumGames       Date</span>
+<span class="co">#&gt; 1   Ken Jennings          75 2004-11-30</span>
+<span class="co">#&gt; 2  Julia Collins          21 2014-06-02</span>
+<span class="co">#&gt; 3   David Madden          20 2005-09-19</span>
+<span class="co">#&gt; 4   Matt Jackson          14 2015-10-14</span>
+<span class="co">#&gt; 5  Austin Rogers          13 2017-10-12</span>
+<span class="co">#&gt; 6    Seth Wilson          13 2016-10-05</span>
+<span class="co">#&gt; 7     Arthur Chu          12 2014-03-12</span>
+<span class="co">#&gt; 8    Buzzy Cohen          10 2016-05-27</span>
+<span class="co">#&gt; 9   Jason Keller          10 2011-12-29</span>
+<span class="co">#&gt; 10    Dan Pawson          10 2008-01-09</span></code></pre></div>
+</section>
+<section id="section-1" class="slide level2">
+<h2></h2>
+<p>The distribution of the number of games by a player, leaving out the outliers (players who played more than 10 games) as well as players who never won (i.e. only played one game):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(MaxNumGames &gt;<span class="st"> </span><span class="dv">1</span> &amp;<span class="st"> </span>MaxNumGames &lt;<span class="st"> </span><span class="dv">11</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span><span class="kw">factor</span>(MaxNumGames))) +
+<span class="st">        </span><span class="co"># geom_bar(binwidth=0.10, stat=&quot;count&quot;) + xlab(&quot;NumGamesPlayed&quot;) +</span>
+<span class="st">        </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;NumGamesPlayed&quot;</span>) +
+<span class="st">        </span><span class="kw">coord_flip</span>() +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Counts of Number of Games Played by a Player&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot07-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Most winners only win once and winning more than 5 games is rare.</p>
+</section>
+<section id="total-winnings-per-player" class="slide level2">
+<h2>Total Winnings Per Player</h2>
+<p>Here we look at the total winnings for player over all the games she or he played. The number of wins is one less than the number of times on the show.</p>
+<p>Here are the winnings for the players who won 10 or more games:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Name =</span> <span class="kw">first</span>(Name), <span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow),
+        <span class="dt">Date =</span> <span class="kw">max</span>(Date), <span class="dt">Dollars =</span> <span class="kw">sum</span>(FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(MaxNumGames &gt;=<span class="st"> </span><span class="dv">10</span>) %&gt;%
+<span class="st">    </span><span class="kw">select</span>(Name, MaxNumGames, Date, Dollars) %&gt;%
+<span class="st">    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(MaxNumGames), <span class="kw">desc</span>(Date)) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;             Name MaxNumGames       Date Dollars</span>
+<span class="co">#&gt; 1   Ken Jennings          75 2004-11-30 2529499</span>
+<span class="co">#&gt; 2  Julia Collins          21 2014-06-02  428100</span>
+<span class="co">#&gt; 3   David Madden          20 2005-09-19  443700</span>
+<span class="co">#&gt; 4   Matt Jackson          14 2015-10-14  412011</span>
+<span class="co">#&gt; 5  Austin Rogers          13 2017-10-12  444150</span>
+<span class="co">#&gt; 6    Seth Wilson          13 2016-10-05  284007</span>
+<span class="co">#&gt; 7     Arthur Chu          12 2014-03-12  297200</span>
+<span class="co">#&gt; 8    Buzzy Cohen          10 2016-05-27  184803</span>
+<span class="co">#&gt; 9   Jason Keller          10 2011-12-29  215700</span>
+<span class="co">#&gt; 10    Dan Pawson          10 2008-01-09  174702</span></code></pre></div>
+<p>The total winninges versus number of games played for players who won less than 10 games (we use jitter to better visualize the data in each group):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">group_by</span>(jeopardyData, PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumberWins =</span> <span class="kw">n</span>() -<span class="st"> </span><span class="dv">1</span>) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Wins =</span> <span class="kw">first</span>(NumberWins), <span class="dt">Dollars =</span> <span class="kw">sum</span>(FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(Wins &gt;<span class="st"> </span><span class="dv">0</span>) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(Wins &lt;<span class="st"> </span><span class="dv">10</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>Wins, <span class="dt">y=</span>Dollars)) +
+<span class="st">        </span><span class="kw">geom_jitter</span>(<span class="dt">position =</span> <span class="kw">position_jitter</span>(<span class="dt">width =</span> .<span class="dv">3</span>)) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Total Amount Won by a Player versus Number of Games Played&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot08-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</section>
+<section id="another-look-at-winnings" class="slide level2">
+<h2>Another Look at Winnings</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">NumberWins =</span> <span class="kw">n</span>() -<span class="st"> </span><span class="dv">1</span>) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Wins =</span> <span class="kw">first</span>(NumberWins), <span class="dt">Dollars =</span> <span class="kw">sum</span>(FinalScore)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(Wins &gt;<span class="st"> </span><span class="dv">0</span>) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(Wins &lt;<span class="st"> </span><span class="dv">10</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>Wins, <span class="dt">y=</span>Dollars)) +
+<span class="st">        </span><span class="kw">geom_boxplot</span>(<span class="kw">aes</span>(<span class="dt">group =</span> Wins)) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Boxplots of Amount Won by a Player versus Number of Games Played&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot09-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</section>
+<section id="winnings-by-gender" class="slide level2">
+<h2>Winnings by Gender</h2>
+<p>The gender of the 9654 players:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(!<span class="kw">is.na</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Gender1 =</span> <span class="kw">first</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">cbind</span>(<span class="dt">Count=</span><span class="kw">table</span>(Gender1),
+        <span class="dt">Percent=</span><span class="kw">round</span>(<span class="kw">table</span>(Gender1)/<span class="kw">sum</span>(<span class="kw">table</span>(Gender1)) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;   Count Percent</span>
+<span class="co">#&gt; F  4258   45.99</span>
+<span class="co">#&gt; M  5001   54.01</span></code></pre></div>
+<p>This is the gender of all the players (that we were able to compute the gender for) and is close to 50:50. At least one third of all of these players will play in more than one game (see earlier analysis of number of names played by gender).</p>
+<p>Here we look at the gender distribution for each game. There are 4 possible combinations for the 3 contestants: FFF, FFM, FMM, and MMM. Since the winner plays in the next game, the same player can contribute to many gender tryads.</p>
+<p>To compute:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trigen &lt;-<span class="st"> </span>function(gen) {
+    if(<span class="kw">any</span>(<span class="kw">is.na</span>(gen))) {
+      <span class="ot">NA_character_</span>
+    } else {
+        <span class="kw">paste0</span>(<span class="kw">sort</span>(gen), <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    }
+}
+jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">ShowGender =</span> <span class="kw">trigen</span>(Gender)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">cbind</span>(<span class="dt">Count=</span><span class="kw">table</span>(ShowGender),
+        <span class="dt">Percent=</span><span class="kw">round</span>(<span class="kw">table</span>(ShowGender)/<span class="kw">sum</span>(<span class="kw">table</span>(ShowGender)) *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>))) %&gt;%
+<span class="st">    </span>knitr::<span class="kw">kable</span>(<span class="dt">padding=</span><span class="dv">0</span>)</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Count</th>
+<th style="text-align: left;">Percent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">FFF</td>
+<td style="text-align: left;">94</td>
+<td style="text-align: left;">2.29</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FFM</td>
+<td style="text-align: left;">1208</td>
+<td style="text-align: left;">29.38</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FMM</td>
+<td style="text-align: left;">2485</td>
+<td style="text-align: left;">60.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMM</td>
+<td style="text-align: left;">324</td>
+<td style="text-align: left;">7.88</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A lot</td>
+<td style="text-align: left;">more g</td>
+<td style="text-align: left;">ames are played with two or more male contestants.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ken-jennings" class="slide level2">
+<h2>Ken Jennings</h2>
+<p>The player with longest winning streak, 74 games (the 75th game was a loss):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(PlayerId) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">MaxNumGames =</span> <span class="kw">max</span>(NumTimesOnShow)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(MaxNumGames ==<span class="st"> </span><span class="dv">75</span>) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">NumberWins =</span> <span class="kw">n</span>() -<span class="st"> </span><span class="dv">1</span>) %&gt;%
+<span class="st">    </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;                                             PlayerId NumberWins</span>
+<span class="co">#&gt; 1 Ken Jennings.software engineer.Salt Lake City.Utah         74</span></code></pre></div>
+<p>Ken Jennings won 2,520,700 dollars in his 75 games.</p>
+</section>
+<section id="ken-jennnings-final-game" class="slide level2">
+<h2>Ken Jennnings Final Game</h2>
+<p>The final scores in the game he lost:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(<span class="st">&quot;Ken Jennings.software engineer.Salt Lake City.Utah&quot;</span>
+        %in%<span class="st"> </span>PlayerId, <span class="kw">any</span>(NumTimesOnShow ==<span class="st"> </span><span class="dv">75</span>)) %&gt;%
+<span class="st">        </span><span class="kw">ungroup</span>() %&gt;%
+<span class="st">        </span><span class="kw">select</span>(Name, FinalScore) %&gt;%
+<span class="st">        </span><span class="kw">arrange</span>(<span class="kw">desc</span>(FinalScore)) %&gt;%
+<span class="st">        </span><span class="kw">as.data.frame</span>()
+<span class="co">#&gt;            Name FinalScore</span>
+<span class="co">#&gt; 1    Nancy Zerg      14401</span>
+<span class="co">#&gt; 2  Ken Jennings       8799</span>
+<span class="co">#&gt; 3 David Hankins      -2800</span></code></pre></div>
+</section>
+<section id="ken-jennings-winnings-by-game" class="slide level2">
+<h2>Ken Jennings Winnings by Game</h2>
+<p>His winnings by game:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">filter</span>(jeopardyData,
+    PlayerId ==<span class="st"> &quot;Ken Jennings.software engineer.Salt Lake City.Utah&quot;</span>,
+    NumTimesOnShow &lt;<span class="st"> </span><span class="dv">75</span>) %&gt;%
+<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>Date, <span class="dt">y=</span>FinalScore)) +<span class="st"> </span><span class="kw">geom_point</span>() +
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Date in 2004&quot;</span>) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Ken Jennings Winnings by Date of Game&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot10-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</section>
+<section id="ken-jennings-percent-correct" class="slide level2">
+<h2>Ken Jennings Percent Correct</h2>
+<p>Jennings percent correct in each game:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">filter</span>(jeopardyData,
+    PlayerId ==<span class="st"> &quot;Ken Jennings.software engineer.Salt Lake City.Utah&quot;</span>) %&gt;%
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">PercentCorrect =</span>
+        (NumRight +<span class="st"> </span>DDRight) /<span class="st"> </span>(NumRight +<span class="st"> </span>NumWrong +<span class="st"> </span>DDWrong +<span class="st"> </span>DDRight) *<span class="st"> </span><span class="dv">100</span>) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">summary</span>(PercentCorrect))
+<span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
+<span class="co">#&gt;   77.27   88.24   91.49   91.26   95.12  100.00</span></code></pre></div>
+</section>
+<section id="ken-jennings-runaways" class="slide level2">
+<h2>Ken Jennings Runaways</h2>
+<p>How often did Jennings win in a runaway?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">jeopardyData %&gt;%
+<span class="st">    </span><span class="kw">group_by</span>(Show) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(<span class="st">&quot;Ken Jennings.software engineer.Salt Lake City.Utah&quot;</span>
+        %in%<span class="st"> </span>PlayerId, <span class="kw">all</span>(NumTimesOnShow &lt;<span class="st"> </span><span class="dv">75</span>)) %&gt;%
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">Runaway =</span> <span class="kw">isRunaway</span>(SecondRoundScore)) %&gt;%
+<span class="st">    </span><span class="kw">with</span>(<span class="kw">c</span>(<span class="dt">NumberRunaways=</span><span class="kw">sum</span>(Runaway),
+        <span class="dt">PercentRunaways=</span><span class="kw">round</span>(<span class="kw">sum</span>(Runaway) /<span class="st"> </span><span class="kw">length</span>(Runaway)  *<span class="st"> </span><span class="dv">100</span>, <span class="dv">2</span>)))
+<span class="co">#&gt;  NumberRunaways PercentRunaways </span>
+<span class="co">#&gt;           65.00           87.84</span></code></pre></div>
+</section>
+<section id="players-by-state" class="slide level2">
+<h2>Players by State</h2>
+<p>Where do Jeopardy players come from? While there are players from countries other than the United States, the vast majority are from the U.S.</p>
+<p>The number of players from each state;</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">NPlayers &lt;-<span class="st"> </span><span class="kw">table</span>(jeopardyData$State)
+stateDF &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">State =</span> <span class="kw">names</span>(NPlayers),
+    <span class="dt">NPlayers =</span> <span class="kw">c</span>(NPlayers)) %&gt;%
+<span class="st">    </span><span class="kw">filter</span>(State %in%<span class="st"> </span><span class="kw">c</span>(state.name, <span class="st">&quot;D.C.&quot;</span>))
+<span class="kw">ggplot</span>(stateDF, <span class="kw">aes</span>(<span class="dt">x=</span>NPlayers,
+        <span class="dt">y=</span><span class="kw">ordered</span>(State, <span class="dt">levels=</span>State[<span class="kw">order</span>(NPlayers)]))) +
+<span class="st">        </span><span class="kw">geom_point</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;Number of Players&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;State&quot;</span>) +
+<span class="st">        </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of Players by State&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/unnamed-chunk-32-1.png" width="768" /></p>
+<p>The state with more people tend to have more players on Jeopardy. To make more appropriate comparisons, we need state population data.</p>
+<p>State population data was downloaded from the U.S. Census <a href="http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv" class="uri">http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv</a>. The CSV file includes aggregation data at the top and population values for multiple years. We only extracted the data for the 50 states and the District of Columbia and only used the 2010 values.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># URL &lt;- &quot;http://www.census.gov/popest/data/state/totals/2012/tables/NST-EST2012-01.csv&quot;</span>
+<span class="co"># censusTmpFile &lt;- tempfile()</span>
+<span class="co"># download.file(URL, destfile=censusTmpFile)</span>
+<span class="co"># popPipe &lt;- pipe(paste0(&quot;sed -n -e &#39;/Alabama/,/Wyoming/p&#39; &quot;, censusTmpFile, &quot; | cut -d&#39;\&quot;&#39; --output-delimiter=\&quot;;\&quot; -f1-2 | sed -e &#39;s/\&quot;//&#39; -e &#39;s/^.//&#39; -e &#39;s/,//g&#39;&quot;))</span>
+<span class="co"># statePop &lt;- read.table(popPipe, sep=&quot;;&quot;, col.names=c(&quot;State&quot;, &quot;Population&quot;),</span>
+<span class="co">#     stringsAsFactors=FALSE)</span>
+statePop &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;pop_by_state_2017.csv&quot;</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)
+statePop[statePop$State ==<span class="st"> &quot;District of Columbia&quot;</span>, <span class="st">&quot;State&quot;</span>] &lt;-<span class="st"> &quot;D.C.&quot;</span>
+indx51 &lt;-<span class="st"> </span><span class="kw">match</span>(stateDF$State, statePop$State)
+stateDF$Population &lt;-<span class="st"> </span>statePop[indx51, <span class="st">&quot;Population&quot;</span>]</code></pre></div>
+</section>
+<section id="players-vs-state-population" class="slide level2">
+<h2>Players vs State Population</h2>
+<p>The number of players versus the state population:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="dt">data=</span>stateDF, <span class="kw">aes</span>(<span class="dt">x=</span>Population, <span class="dt">y=</span>NPlayers)) +
+<span class="st">    </span><span class="kw">geom_point</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;State Population&quot;</span>) +
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="dt">data=</span><span class="kw">subset</span>(stateDF,
+        State %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;New York&quot;</span>, <span class="st">&quot;D.C.&quot;</span>, <span class="st">&quot;Texas&quot;</span>, <span class="st">&quot;Florida&quot;</span>)),
+        <span class="kw">aes</span>(Population, NPlayers, <span class="dt">label=</span>State, <span class="dt">vjust=</span><span class="fl">1.3</span>, <span class="dt">hjust=</span><span class="fl">0.2</span>)) +
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="dt">data=</span><span class="kw">subset</span>(stateDF,
+        State %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;California&quot;</span>)),
+        <span class="kw">aes</span>(Population, NPlayers, <span class="dt">label=</span>State, <span class="dt">vjust=</span><span class="fl">1.3</span>, <span class="dt">hjust=</span><span class="fl">0.8</span>)) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of Players versus State Population&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot12-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>As we noted earlier, the bigger the state’s population, the more players from that state. Texas and Florida have the second and fourth largest population but a low number of players and D.C. with a small population, has a disproportionate number of players.</p>
+<p>To see if players are equally likely to come from any U.S. state, we want to compare the number of players from each state to the state’s population. We add a standardized number of players per million people in a state to the <code>stateDF</code> dataset:</p>
+</section>
+<section id="normalized-players-by-state" class="slide level2">
+<h2>Normalized Players by State</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stateDF$PlayersPerMillion &lt;-<span class="st"> </span><span class="kw">with</span>(stateDF, NPlayers/Population *<span class="st"> </span><span class="fl">1e6</span>)</code></pre></div>
+<p>The number of players standardized by state’s population (on log2 scale):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="dt">data=</span>stateDF, <span class="kw">aes</span>(<span class="dt">x=</span><span class="kw">log2</span>(PlayersPerMillion),
+    <span class="dt">y=</span><span class="kw">ordered</span>(State, <span class="dt">levels=</span>State[<span class="kw">order</span>(stateDF$PlayersPerMillion)]))) +
+<span class="st">    </span><span class="kw">geom_point</span>() +
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Number of Players / 1 Million Population&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;State&quot;</span>) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of Players Standardized by State Population&quot;</span>)</code></pre></div>
+<p><img src="jeopardy_rmdshower_files/figure-revealjs/plot13-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>The East coast and West Coast is very well represented after adjusting for population. The Midwest is mostly in the middle and the South and plains states are under represented.</p>
+</section>
+
+  <!--
+  To hide progress bar from entire presentation
+  just remove “progress” element.
+  -->
+  <!-- <div class="progress"></div> -->
+  <script src="jeopardy_rmdshower_files/rmdshower/node_modules/shower/node_modules/shower-core/shower.min.js"></script>
+  <!-- Copyright © 2015 Yours Truly, Famous Inc. -->
+  <!-- Photos by John Carey, fiftyfootshadows.net -->
+
+    <script>renderMathInElement(document.body);</script>
+  
+  
+</body>
+</html>
