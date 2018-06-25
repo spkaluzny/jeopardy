@@ -116,13 +116,13 @@ jeopardyData <- jcleanData(jeopardyDataRaw)
 * Analysis of `PlayerId` indicated that it uniquely identified players
 ```{r}
 jeopardyData$PlayerId <- with(jeopardyData,
-    paste(Name, Occupation, City, State, sep='.'))
+  paste(Name, Occupation, City, State, sep='.'))
 ```
 * `Date` variable was extracted from information in the `Title` variable
 ```{r}
 airedIndex <- regexpr(" aired ", jeopardyData$Title)
 jeopardyData$Date <- as.Date(
-    substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
+  substr(jeopardyData$Title, airedIndex + 7, nchar(jeopardyData$Title)))
 ```
 
 ## Winning Amount
@@ -130,8 +130,8 @@ jeopardyData$Date <- as.Date(
 * A `GameMaxValue` variable was added to distinguish games before and after the change:
 
 ```{r}
-jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date < as.Date("2001-11-23"),
-    "Max1000", "Max2000")
+jeopardyData$GameMaxValue <- ifelse(jeopardyData$Date <
+  as.Date("2001-11-23"), "Max1000", "Max2000")
 ```
 
 ## The Winner
@@ -142,14 +142,14 @@ A variable, `IsWinner`, was added to identify the winner(s) in each game
 isWinner <-
 function (x)
 {
-    r <- rank(x)
-    if (all(r == 2)) {
-        r <- c(4, 4, 4)
-    }
-    (r == 3) | (r == 2.5) | (r == 4)
+  r <- rank(x)
+  if (all(r == 2)) {
+    r <- c(4, 4, 4)
+  }
+  (r == 3) | (r == 2.5) | (r == 4)
 }
 jeopardyData <- group_by(jeopardyData, Show) %>%
-    mutate(IsWinner = isWinner(FinalScore))
+  mutate(IsWinner = isWinner(FinalScore))
 jeopardyData <- ungroup(jeopardyData)
 ```
 
@@ -171,12 +171,12 @@ uFirstName <- uGenderDF$name
 # Code "male" as "M", "female" as "F"
 uGender <- ifelse(uGender == "male", "M", uGender)
 uGender <- ifelse(uGender == "female", "F", uGender)
-# Only consider gender that has prop. greater than propCutoff, otherwise NA
+# Only consider gender that has prop. greater than propCutoff, else NA
 propCutoff <- 0.75
 uGender <- ifelse((!is.na(uGender) & uGender == "M" &
-    uGenderDF$proportion_male < propCutoff), NA, uGender)
+  uGenderDF$proportion_male < propCutoff), NA, uGender)
 uGender <- ifelse((!is.na(uGender) & uGender == "F" &
-    uGenderDF$proportion_female < propCutoff), NA, uGender)
+  uGenderDF$proportion_female < propCutoff), NA, uGender)
 mFirstName <- match(firstName, uFirstName)
 jeopardyData$Gender <- uGender[mFirstName]
 ```
@@ -188,7 +188,7 @@ jeopardyData <- jeopardyData %>%
   mutate(firstName = gsub("^(.*?)\\s.*", "\\1", Name))
 # Only do the unique firstNames
 uGenderDF <- gender(unique(jeopardyData[["firstName"]]))
-# Only consider gender that has prop. greater than propCutoff, otherwise NA
+# Only consider gender that has prop. greater than propCutoff, else NA
 propCutoff <- 0.75
 uGenderDF <- uGenderDF %>%
   mutate(Gender = case_when(
@@ -247,36 +247,35 @@ jeopardyData %>%
 
 ```{r plot01, fig.show='hold', fig.align='center', echo=FALSE}
 jeopardyData %>%
-    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    ggplot(aes(x=factor(NumAttempted))) +
-        geom_bar() + xlab("Number Clues Attempted (out of 60 total) by a Player") +
-        ggtitle("Distribution of Number of Clues Attempted by a Player")
+  mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+  ggplot(aes(x=factor(NumAttempted))) +
+    geom_bar() + xlab("Number Clues Attempted (out of 60 total) by a Player") +
+    ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
 
 ## The same graph, by gender
 
 ```{r plot02code, eval=FALSE, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    filter(!is.na(Gender)) %>%
-    ggplot(aes(x=factor(NumAttempted))) +
-        geom_bar() + xlab("Number Clues Attempted by a Player") +
-        facet_grid(Gender ~ .) +
-        ggtitle("Distribution of Clues Attempted by Gender")
+  mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+  filter(!is.na(Gender)) %>%
+  ggplot(aes(x=factor(NumAttempted))) +
+    geom_bar() + xlab("Number Clues Attempted by a Player") +
+    facet_grid(Gender ~ .) +
+    ggtitle("Distribution of Clues Attempted by Gender")
 
 ```
 
 -----
 
-```{r plot02, echo=FALSE, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot02, echo=FALSE, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
-    filter(!is.na(Gender)) %>%
-    ggplot(aes(x=factor(NumAttempted))) +
-        geom_bar() + xlab("Number Clues Attempted by a Player") +
-        facet_grid(Gender ~ .) +
-        ggtitle("Distribution of Clues Attempted by Gender")
-
+  mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+  filter(!is.na(Gender)) %>%
+  ggplot(aes(x=factor(NumAttempted))) +
+    geom_bar() + xlab("Number Clues Attempted by a Player") +
+    facet_grid(Gender ~ .) +
+    ggtitle("Distribution of Clues Attempted by Gender")
 ```
 
 Men tend to attempt more questions then women
@@ -291,19 +290,19 @@ another play can try to answer that same question.
 ## The percentage of clues answers correctly
 ```{r}
 jeopardyData %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    with(summary(PercentCorrect))
+  mutate(PercentCorrect =
+    (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+  with(summary(PercentCorrect))
 ```
 
 ## A density plot of the percent correct answers:
-```{r plot03, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot03, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) /
-            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    ggplot(aes(x=PercentCorrect)) +
-        geom_density()
+  mutate(PercentCorrect =
+    (NumRight + DDRight) /
+    (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+  ggplot(aes(x=PercentCorrect)) +
+    geom_density()
 ```
 
 The most common percent correct values are between 82 and 90,
@@ -317,30 +316,30 @@ different.
 
 ##
 
-```{r plot04, fig.width=12, fig.height=12, fig.show='hold', fig.align='center'}
+```{r plot04, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
-        PercentCorrect = (NumRight + DDRight) /
-            (NumRight + NumWrong + DDWrong + DDRight) * 100,
-        AlwaysRight = (PercentCorrect > 99)) %>%
-    ggplot(aes(x = NumAttempted, color=AlwaysRight)) +
-        geom_density() +
-        xlab("Number of Clues Attempted") +
-        ggtitle("Number Attempted for Perfect Player vs Other Players")
+  mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight,
+    PercentCorrect = (NumRight + DDRight) /
+      (NumRight + NumWrong + DDWrong + DDRight) * 100,
+    AlwaysRight = (PercentCorrect > 99)) %>%
+  ggplot(aes(x = NumAttempted, color=AlwaysRight)) +
+    geom_density() +
+    xlab("Number of Clues Attempted") +
+    ggtitle("Number Attempted for Perfect Player vs Other Players")
 ```
 
 Most players who get all questions correct tend not to attempt as many questions as other players.
 
 ## Density of percent correct answers by gender
-```{r plot05, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot05, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    filter(!is.na(Gender)) %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) /
-            (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    ggplot(aes(x=PercentCorrect, color=Gender)) +
-        geom_density() +
-        ggtitle("Density of Percent Correct by Gender")
+  filter(!is.na(Gender)) %>%
+  mutate(PercentCorrect =
+    (NumRight + DDRight) /
+    (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+  ggplot(aes(x=PercentCorrect, color=Gender)) +
+    geom_density() +
+    ggtitle("Density of Percent Correct by Gender")
 ```
 
 We have the spike at 100 percent for both female and male players.
@@ -357,17 +356,17 @@ The number of daily doubles found by players in a game:
 
 ```{r}
 jeopardyData %>%
-    mutate(DDCount = DDWrong + DDRight) %>%
-    with(cbind(NumDD = 0:3, DDCount = table(DDCount),
-       Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2)))
+  mutate(DDCount = DDWrong + DDRight) %>%
+  with(cbind(NumDD = 0:3, DDCount = table(DDCount),
+    Percent =  round(table(DDCount) /  sum(table(DDCount)) * 100, 2)))
 ```
 
 ## The percentage of all daily doubles answered correctly
-`r
+```{r}
 jeopardyData %>%
-    filter(DDWrong + DDRight > 0) %>%
-    summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
-` percent.
+  filter(DDWrong + DDRight > 0) %>%
+  summarise(PercentDDRight = round(sum(DDRight) / sum(DDWrong + DDRight) * 100, 2))
+```
 
 ## Number of Final Jeopardy Players
 
@@ -377,22 +376,22 @@ The number of players in Final Jeopardy:
 
 ```{r}
 NFinal <- jeopardyData %>%
-    group_by(Show) %>%
-    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
-    summarise(NumberInFinal = first(NumberInFinal)) %>%
-    with(table(NumberInFinal))
+  group_by(Show) %>%
+  mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+  summarise(NumberInFinal = first(NumberInFinal)) %>%
+  with(table(NumberInFinal))
 cbind(NumberOfPlayers=1:3, Count = NFinal,
-    Percentage = round(NFinal / sum(NFinal) * 100, 2))
+  Percentage = round(NFinal / sum(NFinal) * 100, 2))
 ```
 
 The shows with only one player left for Final Jeopardy:
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
-    mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
-    filter(NumberInFinal == 1) %>%
-    select(Date, Name, SecondRoundScore) %>%
-    as.data.frame()
+  group_by(Show) %>%
+  mutate(NumberInFinal = sum(SecondRoundScore > 0)) %>%
+  filter(NumberInFinal == 1) %>%
+  select(Date, Name, SecondRoundScore) %>%
+  as.data.frame()
 ```
 
 ## Runaways
@@ -402,14 +401,14 @@ other players at the end of the Double Jeopardy round.
 
 ```{r}
 isRunaway <- function(score) {
-    score <- sort(score)
-    all(score[3] >= 2*score[-3])
+  score <- sort(score)
+  all(score[3] >= 2*score[-3])
 }
 jeopardyData %>%
-    group_by(Show) %>%
-    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
-    with(c(NumberRunaways=sum(Runaway),
-        PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
+  group_by(Show) %>%
+  summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+  with(c(NumberRunaways=sum(Runaway),
+    PercentRunaways=round(sum(Runaway) / length(Runaway) * 100, 2)))
 ```
 
 ## Ties
@@ -417,11 +416,11 @@ How often does the game end with multiple winners (i.e. a tie)?
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
-    mutate(NumWinners = sum(IsWinner)) %>%
-    summarise(NumWinners = first(NumWinners)) %>%
-    with(cbind(Winners = 1:3, Count = table(NumWinners),
-        Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
+  group_by(Show) %>%
+  mutate(NumWinners = sum(IsWinner)) %>%
+  summarise(NumWinners = first(NumWinners)) %>%
+  with(cbind(Winners = 1:3, Count = table(NumWinners),
+    Percent = round(table(NumWinners) / sum(NumWinners) * 100, 2)))
 ```
 
 Most games have only one winner.
@@ -434,11 +433,11 @@ at the end of the double jeopardy round, win the game?
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
-    mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
-    filter(IsWinner) %>%
-    with(c(Count = sum(IsComeback),
-        Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
+  group_by(Show) %>%
+  mutate(IsComeback = (SecondRoundScore == min(SecondRoundScore))) %>%
+  filter(IsWinner) %>%
+  with(c(Count = sum(IsComeback),
+    Percent = round(sum(IsComeback) / length(IsComeback) * 100, 2)))
 ```
 
 ## Final Jeopardy Stumpers
@@ -455,14 +454,14 @@ So we only count those who made a wager in Final Jeopardy.
 
 ```{r}
 isStumper <- function(score2, score3) {
-    all(score3 < score2)
+  all(score3 < score2)
 }
 jeopardyData %>%
-    group_by(Show) %>%
-    filter(all(SecondRoundScore != FinalScore)) %>%
-    summarise(IsStumper = isStumper(SecondRoundScore, FinalScore)) %>%
-    with(c(Count = sum(IsStumper), Games = length(IsStumper),
-        Percent = round(sum(IsStumper) / length(IsStumper) * 100, 2)))
+  group_by(Show) %>%
+  filter(all(SecondRoundScore != FinalScore)) %>%
+  summarise(IsStumper = isStumper(SecondRoundScore, FinalScore)) %>%
+  with(c(Count = sum(IsStumper), Games = length(IsStumper),
+    Percent = round(sum(IsStumper) / length(IsStumper) * 100, 2)))
 ```
 
 ## Dollar Winnings in a Game
@@ -472,13 +471,13 @@ at games before the dollar values doubled and after.
 
 ```{r}
 jeopardyData %>%
-    filter(IsWinner) %>%
-    group_by(GameMaxValue) %>%
-    summarize(AveWinnings=mean(FinalScore),
-        MedianWinnings=median(FinalScore),
-        MinWinnings=min(FinalScore),
-        MaxWinnings=max(FinalScore)) %>%
-    as.data.frame()
+  filter(IsWinner) %>%
+  group_by(GameMaxValue) %>%
+  summarize(AveWinnings=mean(FinalScore),
+    MedianWinnings=median(FinalScore),
+    MinWinnings=min(FinalScore),
+    MaxWinnings=max(FinalScore)) %>%
+  as.data.frame()
 ```
 
 The mean and median winnings are both about doubled
@@ -488,9 +487,9 @@ The shows where the winning score was 0:
 
 ```{r}
 jeopardyData %>%
-    filter(IsWinner, FinalScore == 0) %>%
-    select(Date, Name, FinalScore) %>%
-    as.data.frame()
+  filter(IsWinner, FinalScore == 0) %>%
+  select(Date, Name, FinalScore) %>%
+  as.data.frame()
 ```
 
 In one game, all 3 players won with 0
@@ -501,7 +500,7 @@ since none of these players played in the next day's game.
 ## Distribution of Winnings
 ```{r plot06, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 filter(jeopardyData, IsWinner) %>%
-    ggplot(aes(x=FinalScore)) +
+  ggplot(aes(x=FinalScore)) +
     geom_histogram(binwidth = 2000) +
     facet_grid(GameMaxValue ~ .) +
     ggtitle("Distribution of Game Winnings")
@@ -522,9 +521,9 @@ We want to look at the maximum value of `NumTimeOnShow` for each player:
 
 ```{r}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    with(summary(MaxNumGames))
+  group_by(PlayerId) %>%
+  mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+  with(summary(MaxNumGames))
 ```
 
 Half the players only are on one show.
@@ -532,20 +531,19 @@ Which is not surprising since two players (usually) do not return.
 One player was on 75 times.
 We will investigate that player later.
 
-
 ## Games by Gender
 
 Number of games played by gender:
 
 ```{r}
 jeopardyData %>%
-    filter(!is.na(Gender)) %>%
-    group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    group_by(Gender) %>%
-    summarise(Min=min(MaxNumGames), Median=median(MaxNumGames),
-        Mean=mean(MaxNumGames), Max=max(MaxNumGames)) %>%
-	as.data.frame()
+  filter(!is.na(Gender)) %>%
+  group_by(PlayerId) %>%
+  mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+  group_by(Gender) %>%
+  summarise(Min=min(MaxNumGames), Median=median(MaxNumGames),
+    Mean=mean(MaxNumGames), Max=max(MaxNumGames)) %>%
+  as.data.frame()
 ```
 
 ## Most Wins
@@ -555,13 +553,13 @@ the Date is the date of their final game:
 
 ```{r}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
-        Date = max(Date)) %>%
-    filter(MaxNumGames >= 10) %>%
-    select(Name, MaxNumGames, Date) %>%
-    arrange(desc(MaxNumGames), desc(Date)) %>%
-	as.data.frame()
+  group_by(PlayerId) %>%
+  summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+    Date = max(Date)) %>%
+  filter(MaxNumGames >= 10) %>%
+  select(Name, MaxNumGames, Date) %>%
+  arrange(desc(MaxNumGames), desc(Date)) %>%
+  as.data.frame()
 ```
 
 ##
@@ -572,14 +570,14 @@ as well as players who never won (i.e. only played one game):
 
 ```{r plot07, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarise(MaxNumGames = max(NumTimesOnShow)) %>%
-    filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
-    ggplot(aes(x=factor(MaxNumGames))) +
-        # geom_bar(binwidth=0.10, stat="count") + xlab("NumGamesPlayed") +
-        geom_bar() + xlab("NumGamesPlayed") +
-        coord_flip() +
-        ggtitle("Counts of Number of Games Played by a Player")
+  group_by(PlayerId) %>%
+  summarise(MaxNumGames = max(NumTimesOnShow)) %>%
+  filter(MaxNumGames > 1 & MaxNumGames < 11) %>%
+  ggplot(aes(x=factor(MaxNumGames))) +
+    # geom_bar(binwidth=0.10, stat="count") + xlab("NumGamesPlayed") +
+    geom_bar() + xlab("NumGamesPlayed") +
+    coord_flip() +
+    ggtitle("Counts of Number of Games Played by a Player")
 ```
 
 Most winners only win once and winning more than 5 games is rare.
@@ -593,13 +591,13 @@ Here are the winnings for the players who won 10 or more games:
 
 ```{r}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
-        Date = max(Date), Dollars = sum(FinalScore)) %>%
-    filter(MaxNumGames >= 10) %>%
-    select(Name, MaxNumGames, Date, Dollars) %>%
-    arrange(desc(MaxNumGames), desc(Date)) %>%
-	as.data.frame()
+  group_by(PlayerId) %>%
+  summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+    Date = max(Date), Dollars = sum(FinalScore)) %>%
+  filter(MaxNumGames >= 10) %>%
+  select(Name, MaxNumGames, Date, Dollars) %>%
+  arrange(desc(MaxNumGames), desc(Date)) %>%
+  as.data.frame()
 ```
 
 The total winninges versus number of games played for players who won less than 10 games
@@ -607,27 +605,27 @@ The total winninges versus number of games played for players who won less than 
 
 ```{r plot08, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 group_by(jeopardyData, PlayerId) %>%
-    mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
-    filter(Wins > 0) %>%
-    filter(Wins < 10) %>%
-    ggplot(aes(x=Wins, y=Dollars)) +
-        geom_jitter(position = position_jitter(width = .3)) +
-        ggtitle("Total Amount Won by a Player versus Number of Games Played")
+  mutate(NumberWins = n() - 1) %>%
+  summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
+  filter(Wins > 0) %>%
+  filter(Wins < 10) %>%
+  ggplot(aes(x=Wins, y=Dollars)) +
+    geom_jitter(position = position_jitter(width = .3)) +
+    ggtitle("Total Amount Won by a Player versus Number of Games Played")
 ```
 
 ## Another Look at Winnings
 
 ```{r plot09, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    mutate(NumberWins = n() - 1) %>%
-    summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
-    filter(Wins > 0) %>%
-    filter(Wins < 10) %>%
-    ggplot(aes(x=Wins, y=Dollars)) +
-        geom_boxplot(aes(group = Wins)) +
-        ggtitle("Boxplots of Amount Won by a Player versus Number of Games Played")
+  group_by(PlayerId) %>%
+  mutate(NumberWins = n() - 1) %>%
+  summarise(Wins = first(NumberWins), Dollars = sum(FinalScore)) %>%
+  filter(Wins > 0) %>%
+  filter(Wins < 10) %>%
+  ggplot(aes(x=Wins, y=Dollars)) +
+    geom_boxplot(aes(group = Wins)) +
+    ggtitle("Amount Won by a Player versus Number of Games Played")
 ```
 
 ## Winnings by  Gender
@@ -638,11 +636,11 @@ players:
 
 ```{r}
 jeopardyData %>%
-    filter(!is.na(Gender)) %>%
-    group_by(PlayerId) %>%
-    summarise(Gender1 = first(Gender)) %>%
-    with(cbind(Count=table(Gender1),
-        Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
+  filter(!is.na(Gender)) %>%
+  group_by(PlayerId) %>%
+  summarise(Gender1 = first(Gender)) %>%
+  with(cbind(Count=table(Gender1),
+    Percent=round(table(Gender1)/sum(table(Gender1)) * 100, 2)))
 ```
 
 This is the gender of all the players
@@ -661,18 +659,18 @@ To compute:
 
 ```{r}
 trigen <- function(gen) {
-    if(any(is.na(gen))) {
-      NA_character_
-    } else {
-        paste0(sort(gen), collapse = "")
-    }
+  if(any(is.na(gen))) {
+    NA_character_
+  } else {
+    paste0(sort(gen), collapse = "")
+  }
 }
 jeopardyData %>%
-    group_by(Show) %>%
-    summarise(ShowGender = trigen(Gender)) %>%
-    with(cbind(Count=table(ShowGender),
-        Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
-	knitr::kable(padding=0)
+  group_by(Show) %>%
+  summarise(ShowGender = trigen(Gender)) %>%
+  with(cbind(Count=table(ShowGender),
+    Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
+  knitr::kable(padding=0)
 ```
 A lot more games are played with two or more male contestants.
 
@@ -683,11 +681,11 @@ The player with longest winning streak, 74 games
 
 ```{r}
 jeopardyData %>%
-    group_by(PlayerId) %>%
-    mutate(MaxNumGames = max(NumTimesOnShow)) %>%
-    filter(MaxNumGames == 75) %>%
-    summarise(NumberWins = n() - 1) %>%
-	as.data.frame()
+  group_by(PlayerId) %>%
+  mutate(MaxNumGames = max(NumTimesOnShow)) %>%
+  filter(MaxNumGames == 75) %>%
+  summarise(NumberWins = n() - 1) %>%
+  as.data.frame()
 ```
 
 Ken Jennings won
@@ -705,24 +703,24 @@ The final scores in the game he lost:
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
-    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
-        %in% PlayerId, any(NumTimesOnShow == 75)) %>%
-        ungroup() %>%
-        select(Name, FinalScore) %>%
-        arrange(desc(FinalScore)) %>%
-		as.data.frame()
+  group_by(Show) %>%
+  filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+    %in% PlayerId, any(NumTimesOnShow == 75)) %>%
+  ungroup() %>%
+  select(Name, FinalScore) %>%
+  arrange(desc(FinalScore)) %>%
+  as.data.frame()
 ```
 
 ## Ken Jennings Winnings by Game
 
 His winnings by game:
 
-```{r plot10, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot10, fig.show='hold', fig.align='center'}
 filter(jeopardyData,
-    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
+  PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah",
     NumTimesOnShow < 75) %>%
-    ggplot(aes(x=Date, y=FinalScore)) + geom_point() +
+  ggplot(aes(x=Date, y=FinalScore)) + geom_point() +
     xlab("Date in 2004") +
     ggtitle("Ken Jennings Winnings by Date of Game")
 ```
@@ -733,10 +731,10 @@ Jennings percent correct in each game:
 
 ```{r plot11, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 filter(jeopardyData,
-    PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
-    mutate(PercentCorrect =
-        (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
-    with(summary(PercentCorrect))
+  PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
+  mutate(PercentCorrect =
+    (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
+  with(summary(PercentCorrect))
 ```
 
 ## Ken Jennings Runaways
@@ -745,12 +743,12 @@ How often did Jennings win in a runaway?
 
 ```{r}
 jeopardyData %>%
-    group_by(Show) %>%
-    filter("Ken Jennings.software engineer.Salt Lake City.Utah"
-        %in% PlayerId, all(NumTimesOnShow < 75)) %>%
-    summarise(Runaway = isRunaway(SecondRoundScore)) %>%
-    with(c(NumberRunaways=sum(Runaway),
-        PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
+  group_by(Show) %>%
+  filter("Ken Jennings.software engineer.Salt Lake City.Utah"
+    %in% PlayerId, all(NumTimesOnShow < 75)) %>%
+  summarise(Runaway = isRunaway(SecondRoundScore)) %>%
+  with(c(NumberRunaways=sum(Runaway),
+    PercentRunaways=round(sum(Runaway) / length(Runaway)  * 100, 2)))
 ```
 
 ## Players by State
@@ -764,12 +762,12 @@ The number of players from each state;
 ```{r fig.width=8, fig.height=8}
 NPlayers <- table(jeopardyData$State)
 stateDF <- data.frame(State = names(NPlayers),
-    NPlayers = c(NPlayers)) %>%
-    filter(State %in% c(state.name, "D.C."))
+  NPlayers = c(NPlayers)) %>%
+  filter(State %in% c(state.name, "D.C."))
 ggplot(stateDF, aes(x=NPlayers,
-        y=ordered(State, levels=State[order(NPlayers)]))) +
-        geom_point() + xlab("Number of Players") + ylab("State") +
-        ggtitle("Number of Players by State")
+  y=ordered(State, levels=State[order(NPlayers)]))) +
+  geom_point() + xlab("Number of Players") + ylab("State") +
+  ggtitle("Number of Players by State")
 ```
 
 The state with more people tend to have more players on Jeopardy.
@@ -801,13 +799,13 @@ The number of players versus the state population:
 
 ```{r plot12, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 ggplot(data=stateDF, aes(x=Population, y=NPlayers)) +
-    geom_point() + xlab("State Population") +
+  geom_point() + xlab("State Population") +
+  geom_text(data=subset(stateDF,
+      State %in% c("New York", "D.C.", "Texas", "Florida")),
+    aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.2)) +
     geom_text(data=subset(stateDF,
-        State %in% c("New York", "D.C.", "Texas", "Florida")),
-        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.2)) +
-    geom_text(data=subset(stateDF,
-        State %in% c("California")),
-        aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8)) +
+      State %in% c("California")),
+    aes(Population, NPlayers, label=State, vjust=1.3, hjust=0.8)) +
     ggtitle("Number of Players versus State Population")
 ```
 
@@ -831,12 +829,12 @@ stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
 
 The number of players standardized by state's population (on log2 scale):
 
-```{r plot13, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot13, fig.show='hold', fig.align='center'}
 ggplot(data=stateDF, aes(x=log2(PlayersPerMillion),
     y=ordered(State, levels=State[order(stateDF$PlayersPerMillion)]))) +
-    geom_point() +
-    xlab("Number of Players / 1 Million Population") + ylab("State") +
-    ggtitle("Number of Players Standardized by State Population")
+  geom_point() +
+  xlab("Number of Players / 1 Million Population") + ylab("State") +
+  ggtitle("Number of Players Standardized by State Population")
 ```
 
 The East coast and West Coast is very well represented

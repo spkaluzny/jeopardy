@@ -4,6 +4,7 @@ author: "Stephen Kaluzny"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   rmdshower::shower_presentation:
+    theme: material
     self_contained: false
     katex: true
     ratio: 16x10
@@ -245,7 +246,6 @@ jeopardyData %>%
         geom_bar() + xlab("Number Clues (out of 60 total) Attempted by a Player") +
         ggtitle("Distribution of Number of Clues Attempted by a Player")
 ```
-
 -----
 
 ```{r plot01, fig.show='hold', fig.align='center', echo=FALSE}
@@ -258,7 +258,20 @@ jeopardyData %>%
 
 ## The same graph, by gender
 
-```{r plot02, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+```{r plot02code, eval=FALSE, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
+jeopardyData %>%
+    mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
+    filter(!is.na(Gender)) %>%
+    ggplot(aes(x=factor(NumAttempted))) +
+        geom_bar() + xlab("Number Clues Attempted by a Player") +
+        facet_grid(Gender ~ .) +
+        ggtitle("Distribution of Clues Attempted by Gender")
+
+```
+
+-----
+
+```{r plot02, echo=FALSE, fig.width=fwh, fig.height=fht, fig.show='hold', fig.align='center'}
 jeopardyData %>%
     mutate(NumAttempted = NumRight + NumWrong + DDWrong + DDRight) %>%
     filter(!is.na(Gender)) %>%

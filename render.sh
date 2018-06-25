@@ -6,8 +6,14 @@ fi
 OPTIONS=$@
 for OPTION in "$@"; do
     case "$OPTION" in
-        -s*)
+        -p*)
             FILE=jeopardy.Rpres
+        ;;
+        -i*)
+            FILE=jeopardy_isoslides.Rmd
+        ;;
+        -s*)
+            FILE=jeopardy_slidify.Rmd
         ;;
         -r*)
             FILE=jeopardy_rmdshower.Rmd
