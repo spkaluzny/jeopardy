@@ -68,9 +68,9 @@ are shown in the presentation.
 ## Use of TidyVerse
 
 * This is also an exercise in using the `tidyverse` packages, especially:
-  * the `dplyr` package, for data cleanup and manipulation
-  * `dplyr::group_by` used for computing for each game
-  * the `ggplot2` package is used for creating graphics.
+    + the `dplyr` package, for data cleanup and manipulation
+    + `dplyr::group_by` used for computing for each game
+    + the `ggplot2` package is used for creating graphics.
 * Extensive use of the new pipe operator (`%>%`)
 that was introduced wtih the `dplyr` package.
 
@@ -81,10 +81,10 @@ that was introduced wtih the `dplyr` package.
 * First argument is typically the rectangular data structure
 * Data is expected to be in a *tidy* format, one observation per row,
 each variable is contained in a single column
-* The `tidyr` package can manipulate data into the tidy format
+    + The `tidyr` package can manipulate data into the tidy format
 * Initial packages written by Hadley Wickham (hadleyverse)
 
-## The tidyverse Package
+## The `tidyverse` Package
 
 * Installing the tidyverse package installs all the required packages
 * Loading the tidyverse loads the most often used packages
@@ -93,9 +93,21 @@ each variable is contained in a single column
 knitr::include_graphics("tidyverse1.png")
 ```
 
-## Pipes
+## `dplyr`: A Grammar of Data Manipulation
 
-* TidyVerse with common rectangular first argument allow using pipes (`%>%`)
+* consistent tool for working with data frame like objects
+    + both in memory and out of memory
+* 6 basic verbs
+    + select() - select columns
+    + filter() - filter rows
+    + arrange() - re-order or arrange rows
+    + mutate() - create new columns
+    + summarise() - summarise values
+    + group_by() - allows for group operations in the “split-apply-combine” concept
+
+## `magrittr`: A Forward-Pipe Operator for R
+
+* TidyVerse API with common rectangular first argument allow using pipes (`%>%`)
 * Avoids creating temporary variables that can clutter up the workspace
 * Pipes are defined in the `magrittr` package
 ```{r magritteimage, echo=FALSE, fig.cap="This is not a pipe", out.width = '60%'}
@@ -109,7 +121,7 @@ library(dplyr, quietly= TRUE, warn.conflicts = FALSE)
 
 ## The Data
 * The data was scraped from the
-[http://www.j-archive.com site](http://www.j-archive.com) site
+[http://www.j-archive.com](http://www.j-archive.com) site
 * Only regular Jeopardy games were downloaded,
 leaving out championships, teen, college, etc tournaments.
 
@@ -579,7 +591,20 @@ jeopardyData %>%
 Looking at the players who won the most games (10 or more),
 the Date is the date of their final game:
 
-```{r}
+```{r, mostwinscode, eval=FALSE}
+jeopardyData %>%
+  group_by(PlayerId) %>%
+  summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+    Date = max(Date)) %>%
+  filter(MaxNumGames >= 10) %>%
+  select(Name, MaxNumGames, Date) %>%
+  arrange(desc(MaxNumGames), desc(Date)) %>%
+  as.data.frame()
+```
+
+---
+
+```{r, mostwins, echo=FALSE}
 jeopardyData %>%
   group_by(PlayerId) %>%
   summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
@@ -623,7 +648,20 @@ The number of wins is one less than the number of times on the show.
 
 Here are the winnings for the players who won 10 or more games:
 
-```{r}
+```{r, totalwinningscode, eval=FALSE}
+jeopardyData %>%
+  group_by(PlayerId) %>%
+  summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
+    Date = max(Date), Dollars = sum(FinalScore)) %>%
+  filter(MaxNumGames >= 10) %>%
+  select(Name, MaxNumGames, Date, Dollars) %>%
+  arrange(desc(MaxNumGames), desc(Date)) %>%
+  as.data.frame()
+```
+
+---
+
+```{r, totalwinnings, echo=FALSE}
 jeopardyData %>%
   group_by(PlayerId) %>%
   summarise(Name = first(Name), MaxNumGames = max(NumTimesOnShow),
@@ -675,7 +713,7 @@ plt09 <- jeopardyData %>%
 print(plt09)
 ```
 
-## Winnings by Gender
+## Gender
 
 The gender of the
 `r length(unique(jeopardyData$PlayerId))`
@@ -703,7 +741,7 @@ FFF, FFM, FMM, and MMM.
 * Since the winner plays in the next game,
 the same player can contribute to many gender triads.
 
-```{r}
+```{r, eval=FALSE}
 trigen <- function(gen) {
   if(any(is.na(gen))) {
     NA_character_
@@ -718,6 +756,25 @@ jeopardyData %>%
     Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
   knitr::kable(padding=0)
 ```
+
+## Triads
+
+```{r, echo=FALSE}
+trigen <- function(gen) {
+  if(any(is.na(gen))) {
+    NA_character_
+  } else {
+    paste0(sort(gen), collapse = "")
+  }
+}
+jeopardyData %>%
+  group_by(Show) %>%
+  summarise(ShowGender = trigen(Gender)) %>%
+  with(cbind(Count=table(ShowGender),
+    Percent=round(table(ShowGender)/sum(table(ShowGender)) * 100, 2))) %>%
+  knitr::kable(padding=0)
+```
+
 A lot more games are played with two or more male contestants.
 
 ## Ken Jennings
@@ -782,17 +839,11 @@ print(plt10)
 Jennings percent correct in each game:
 
 ```{r plot11code, fig.show='hold', fig.align='center'}
-plt11 <- filter(jeopardyData,
+filter(jeopardyData,
   PlayerId == "Ken Jennings.software engineer.Salt Lake City.Utah") %>%
   mutate(PercentCorrect =
     (NumRight + DDRight) / (NumRight + NumWrong + DDWrong + DDRight) * 100) %>%
   with(summary(PercentCorrect))
-```
-
----
-
-```{r plot11, echo=FALSE, fig.show='hold', fig.align='center'}
-print(plt11)
 ```
 
 ## Ken Jennings Runaways
@@ -811,8 +862,8 @@ jeopardyData %>%
 
 ## Players by State
 
-Where do Jeopardy players come from?
-While there are players from countries other than the United States,
+* Where do Jeopardy players come from?
+* While there are players from countries other than the United States,
 the vast majority are from the U.S.
 
 The number of players from each state;
@@ -878,13 +929,14 @@ In general, the bigger the state's population, the more players from that state.
 Texas and Florida have the second and fourth largest population but
 a low number of players and D.C. with a small population,
 has a disproportionate number of players.
+
+## Normalized Players by State
+
 To see if players are equally likely to come from any U.S. state,
 we want to compare the number of players from each state
 to the state's population.
 We add a standardized number of players per million people in a state to the
 `stateDF` dataset:
-
-## Normalized Players by State
 
 ```{r}
 stateDF$PlayersPerMillion <- with(stateDF, NPlayers/Population * 1e6)
