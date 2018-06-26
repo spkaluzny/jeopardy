@@ -3,3 +3,12 @@ pre {
   left: 0; /* -60px; */
   padding: 0px 5px 0px 5px; /* 10px 15px 10px 15px; 10px 0 10px 60px; */
 }
+body p {
+  color: #555577;
+}
+ul {
+    color: #555577;
+}
+ol {
+    color: #555577;
+}
