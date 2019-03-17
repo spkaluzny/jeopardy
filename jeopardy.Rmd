@@ -95,7 +95,7 @@ Then call `jscrapeDirect` with the raw data as an input
 into a second call to `jscrapeDirect` to process the raw data.
 
 ```{r eval = FALSE}
-jeopardyDataRaw <- jscrapeDirect(id=1:5950)
+jeopardyDataRaw <- jscrapeDirect(id=1:6225)
 ```
 
 ### Cleaning the Data

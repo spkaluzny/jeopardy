@@ -1,6 +1,8 @@
 "jcleanData"<-
-function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE,
-		 dropBackToSchool=TRUE) {
+function(df, dropPilot=TRUE, drop504=TRUE,
+    drop4983=TRUE, drop5348=TRUE, drop6054=TRUE, drop6067=TRUE,
+    dropBackToSchool=TRUE) {
+	# WebId's 4983 5348 6054 6067 are incomplete shows on J Archive
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
     indx <- which(df$City == "Nellis Air Force Base" &
@@ -230,6 +232,18 @@ function(df, dropPilot=TRUE, drop504=TRUE, drop4983=TRUE, drop5348=TRUE,
     }
     if(drop5348) {
         indx <- which(df$WebId == 5348)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop6054) {
+        indx <- which(df$WebId == 6054)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
+    }
+    if(drop6067) {
+        indx <- which(df$WebId == 6067)
         if(length(indx)) {
             df <- df[-indx, ]
         }
