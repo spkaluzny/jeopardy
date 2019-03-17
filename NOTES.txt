@@ -1,4 +1,40 @@
 git pull https://github.com/spkal/jeopardy
+http://www.j-archive.com/showgame.php?game_id=
+
+feb-10-2019
+Fixed up jgetid.R to not drop 4364 show where Alex mentions winners of
+the Battle of the Decades voting but game is a regular game
+Reran jgetid with id <- 1:6225
+
+New shows included:
+6207 - Show #2372 - Tuesday, December 20, 1994
+6209 - Show #2726 - Monday, June 10, 1996
+
+6207 - Show #2372 - Tuesday, December 20, 1994
+5579 - Show #2373 - Wednesday, December 21, 1994
+4227 - Show #2374 - Thursday, December 22, 1994
+
+
+
+feb-04-2019
+Rescraped the data.
+Shows being dropped that should not:
+4364 (Alex announces Andy Westney (1980s), Shane Whitlock (1990s), and Tom Nissley (2000s) as the winners of the Battle of the Decades Fan Favorite online polls.)
+
+jan-21-2019
+Current scripts do not remove
+Battle of the Decades 2014-05-05 - 2014-05-16
+WebId:
+4494 4493 4496 4499 4500 4503 4502 4504 4505 4506
+Battle of the Decades: The 2000s 2014-03-31 - 2014-04-04
+WebId:
+4462 4461 4463 4465 4464 
+
+Returning players:
+Phillip Steele due to technical error 2003-04-14
+Darren Millam
+Anthony Trifilio
+Bob Shore - 4697 2005-01-25, 4784 2005-05-26, 4785 2005-05-27
 
 apr-01-2018
 The census population by state data,
