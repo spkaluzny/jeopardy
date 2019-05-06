@@ -1,4 +1,4 @@
-jgetid <- function(id, sleep=1){
+jgetid <- function(id, sleep=1) {
 
   require("XML", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
   require("plyr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
@@ -19,7 +19,9 @@ jgetid <- function(id, sleep=1){
     doc <- try(htmlParse(url, error = function(...){}))
     r <- xmlRoot(doc)
     tables <- getNodeSet(doc, "//table")
-    if (  is.na(xmlValue(r[[2]][[4]][[4]])) |
+	# WebId 4364 Alex announces Battle of the Decades voting winners, game is
+	#   a regular game
+    if(is.na(xmlValue(r[[2]][[4]][[4]])) |
 	  (regexpr("Championship",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
 	  (regexpr("Kids",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
 	  (regexpr("Back to School",xmlValue(r[[2]][[4]][[4]]))[1] > -1) | 
@@ -32,10 +34,10 @@ jgetid <- function(id, sleep=1){
 	  (regexpr("IBM",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
 	  (regexpr("Power Players",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
 	  (regexpr("Million Dollar",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
-	  (length(llply(tables,names)) < 100))
-
-	  {id <- id[-which(id==m)]}
-
-   }
-   id
+	  (regexpr("Battle of the Decades",xmlValue(r[[2]][[4]][[4]]))[1] > -1 && m != 4364) |
+	  (length(llply(tables,names)) < 100)) {
+	    id <- id[-which(id == m)]
+     }
+  }
+  id
 }
