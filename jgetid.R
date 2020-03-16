@@ -14,6 +14,7 @@ jgetid <- function(id, sleep=1) {
   #Also determines shows that have no data
 
   for (m in id) {
+    cat("id:", m, "\n", file="kgetid.txt", append=TRUE)
     url <- paste0("http://www.j-archive.com/showgame.php?game_id=", m)
     if(sleep > 0) Sys.sleep(sleep)
     doc <- try(htmlParse(url, error = function(...){}))
@@ -34,6 +35,8 @@ jgetid <- function(id, sleep=1) {
 	  (regexpr("IBM",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
 	  (regexpr("Power Players",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
 	  (regexpr("Million Dollar",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
+	  (regexpr("All-Star",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
+	  (regexpr("Greatest of All Time",xmlValue(r[[2]][[4]][[4]]))[1] > -1) |
 	  (regexpr("Battle of the Decades",xmlValue(r[[2]][[4]][[4]]))[1] > -1 && m != 4364) |
 	  (length(llply(tables,names)) < 100)) {
 	    id <- id[-which(id == m)]
