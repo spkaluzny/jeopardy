@@ -1,7 +1,7 @@
 "jcleanData"<-
 function(df, dropPilot=TRUE, drop504=TRUE,
     drop4983=TRUE, drop5348=TRUE, drop6054=TRUE, drop6067=TRUE,
-    dropBackToSchool=TRUE) {
+    dropBackToSchool=TRUE, dropGOAT=TRUE) {
 	# WebId's 4983 5348 6054 6067 are incomplete shows on J Archive
     require("stringr", quietly=TRUE, warn.conflicts=FALSE, character.only=TRUE)
     # Nellis Air Force Base:
@@ -211,6 +211,12 @@ function(df, dropPilot=TRUE, drop504=TRUE,
     indx <- grep('Leslie "Lefty" Scott', df$Name)
     if(length(indx)) {
         df$Name[indx] <- "Leslie Scott"
+    }
+    if(dropGOAT) {
+        indx <- grep("Greatest of All Time", df$Title)
+        if(length(indx)) {
+            df <- df[-indx, ]
+        }
     }
     if(dropPilot) {
         indx <- grep("pilot", df$Title)
