@@ -13,7 +13,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
-    m <- 1:6580
+    m <- 1:7125
     id <- jgetid(m, sleep=sleep)
   }
 
