@@ -13,7 +13,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   colnames(d.temp) <- c("Title","2","3","4","5","6","WebId")
 
   if(is.null(id)) {
-    m <- 1:6400
+    m <- 1:6580
     id <- jgetid(m, sleep=sleep)
   }
 
@@ -21,6 +21,7 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
   # Loop that gets one show's data per iteration and aggregates it
 
   for ( k in id ) {
+    cat("Starting on id:", k, "\n")
 
     url <- paste0("http://www.j-archive.com/showgame.php?game_id=",k)
 
@@ -37,33 +38,39 @@ jscrapeDirect <- function(id=NULL, sleep=1, data=NULL, getDataOnly=FALSE){
 
     cat(k, "\n", file="k.txt", append=TRUE)
     
-    # Create a vector of table lengths to help find the info we want
-    vec <- rep(NA,length(llply(tables,names)))
-    for (j in 1:length(llply(tables,names))){
-      vec[j] <- length(names(tables[[j]]))
-    }
+    if(length(tables) > 0) {
 
-    # Find the tables our info is in
-    firstrd <- max(which(vec==6))-1
-    secrd <- min(which(vec==3))
-    finalrd <- length(vec)-1
-    qcorr <- length(vec)
-
-    # Scrape one show's data
-    for (i in 0:2){
-      d.temp[i+1,1] <- xmlValue(r[[1]][[1]])
-      d.temp[i+1,2] <- xmlValue(tables[[1]][[1]][[3]][[2+2*i]])
-      d.temp[i+1,3] <- xmlValue(tables[[firstrd]][[2]][[5-2*i]])
-      d.temp[i+1,4] <- xmlValue(tables[[secrd]][[2]][[5-2*i]])
-      d.temp[i+1,5] <- xmlValue(tables[[finalrd]][[2]][[5-2*i]])
-      d.temp[i+1,6] <- xmlValue(tables[[qcorr]][[3]][[5-2*i]])
-      d.temp[i+1,7] <- k
-    }
+        # Create a vector of table lengths to help find the info we want
+        vec <- rep(NA,length(llply(tables,names)))
+        for (j in 1:length(llply(tables,names))){
+          vec[j] <- length(names(tables[[j]]))
+        }
     
-    # Bind the show data to the final data frame
-    d.jpdy <- rbind(d.jpdy, d.temp)
+        if(length(vec) > 1) {
+            # Find the tables our info is in
+            firstrd <- max(which(vec==6))-1
+            secrd <- min(which(vec==3))
+            finalrd <- length(vec)-1
+            qcorr <- length(vec)
 
-  }
+         cat(k, qcorr, "\n", file="klenvec.txt", append=TRUE)
+        
+            # Scrape one show's data
+            for (i in 0:2){
+              d.temp[i+1,1] <- xmlValue(r[[1]][[1]])
+              d.temp[i+1,2] <- xmlValue(tables[[1]][[1]][[3]][[2+2*i]])
+              d.temp[i+1,3] <- xmlValue(tables[[firstrd]][[2]][[5-2*i]])
+              d.temp[i+1,4] <- xmlValue(tables[[secrd]][[2]][[5-2*i]])
+              d.temp[i+1,5] <- xmlValue(tables[[finalrd]][[2]][[5-2*i]])
+              d.temp[i+1,6] <- xmlValue(tables[[qcorr]][[3]][[5-2*i]])
+              d.temp[i+1,7] <- k
+            }
+            
+            # Bind the show data to the final data frame
+            d.jpdy <- rbind(d.jpdy, d.temp)
+        }
+      }       
+    } 
   } else {
       d.jpdy <- data
   }
